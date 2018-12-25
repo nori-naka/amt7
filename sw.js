@@ -11,7 +11,7 @@ const urlsToCache = [
     './css/ol.css',
     './css/spectrum.css',
     './css/style.css',
-    './js/jquer-3.3.1.min.js',
+    './js/jquery-3.3.1.min.js',
     './js/jquery.spectrum-ja.js',
     './js/jquery.tinycolorpicker.min.js',
     './js/ol.js'
