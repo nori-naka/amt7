@@ -2,7 +2,7 @@
   "name": "AirMultiTalk",
   "short_name": "AirMulti",
   "icons": [{
-    "src": "./icon-192.png.png",
+    "src": "./icon-192.png",
     "sizes": "192x192",
     "type": "image/png"
   }],
