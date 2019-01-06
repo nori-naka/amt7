@@ -8,7 +8,7 @@ b, i,
 dl, dt, dd, ol, ul, li,
 fieldset, form, label, legend,
 table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, figure, footer, header,&nbsp;hgroup, menu, nav, section, menu,
+article, aside, figure, footer, header, hgroup, menu, nav, section, menu,
 time, mark, audio, video {
     margin:0;
     padding:0;
@@ -360,6 +360,7 @@ button#sizeBtn {
     display: none;
     font-family: "SourceHanSans-Normal";
     color: white;
+    overflow-y: auto;
 }
 
 #backBtn2 {

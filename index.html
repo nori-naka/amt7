@@ -14,6 +14,12 @@
 <link rel="stylesheet" href="css/JISYOU_LAYER.css" type="text/css">
 -->
 <link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="manifest.webmanifest" />
+
+<script async src="https://cdn.jsdelivr.net/npm/pwacompat@2.0.7/pwacompat.min.js"
+    integrity="sha384-ptgwb3/v69WGur7IwSnWOowVxE7hcRB3DG/EiHdejrw2sFNwUHynFbiRMPxc4hdS"
+    crossorigin="anonymous">
+</script>
 
 </head>
 <body>
@@ -152,6 +158,11 @@
       <span>高解像度降水ナウキャスト</span>
       <img src="pic/dialog/select_yes.png" id="OnOffNowcast">
       <input type="range" min="0" max="100" value="100" class="slider2" id="sliderNowcast">
+    </div>
+    <div class="layerDialogContent">
+      <span>洪水ハザードマップ</span>
+      <img src="pic/dialog/select_yes.png" id="OnOffHazerdMap">
+      <input type="range" min="0" max="100" value="100" class="slider2" id="sliderHazerdMap">
     </div>
     <div class="layerDialogContent">
       <span>みちパト</span>

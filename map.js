@@ -18,6 +18,7 @@ var iconLayer;
 var drawLayer;
 var drawLayerSource;
 var freeEraseLayer;
+var hazerdMapLayer;
 
 var freeDraw = null;
 
@@ -273,6 +274,15 @@ function showMap() {
         })
     })
 
+    //
+    hazerdMapLayer = new ol.layer.Tile({
+        source: new ol.source.XYZ({
+          url: 'https://disaportaldata.gsi.go.jp/raster/01_flood_l2_shinsuishin_kuni_data/{z}/{x}/{y}.png'
+        }),
+        opacity: 1,
+        visible: false
+    });
+
     //手書きレイヤー
     initDrawLayer();
 
@@ -292,6 +302,7 @@ function showMap() {
         layers: 
             [
                 mainMapLayer,
+                hazerdMapLayer,
                 nowcastLayer,
                 isoLayer,
                 frontLayer,
@@ -1517,6 +1528,8 @@ function gatWeatherLayers(kind) {
             return [typhoonLayer, typhoonTileLayer];
         case "FreeHand":
             return [drawLayer];
+        case "HazerdMap":
+            return [hazerdMapLayer];
         default:
             return [JISYOU_LAYER.layer];
     }
