@@ -13,7 +13,7 @@ var localVideoElm = document.getElementById("local_video");
 
 var remoteVideoElms = {};
 
-var newRemoteVideoElm = function(id){
+var newRemoteVideoElm = function (id) {
     var video_elem = document.createElement("video");
     //video_elem.muted = true;
     video_elem.setAttribute("playsinline", true);
@@ -55,8 +55,8 @@ function regist(myUid) {
     //socketio.emit('regist', JSON.stringify({'peerid': null}));
 }
 
-function sendTo(msg){
-    socketio.emit("publish", msg );
+function sendTo(msg) {
+    socketio.emit("publish", msg);
 }
 
 //-------------------------------------------------------------------------------
@@ -74,9 +74,9 @@ function P2P(dest, side, myActive, yourActive) {
 
     this.peer = new RTCPeerConnection(
         {
-            iceServers:[
-                {urls: 'stun:stun.l.google.com:19302'},
-                {urls: 'stun:23.21.150.121'}
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:23.21.150.121' }
             ]
         }
     );
@@ -92,8 +92,8 @@ function P2P(dest, side, myActive, yourActive) {
         self.onicecandidate(e);
     }
 
-    this.peer.onaddstream = function(e) {       //!! Deprecated !!
-    //this.peer.ontrack = function(e) {
+    this.peer.onaddstream = function (e) {       //!! Deprecated !!
+        //this.peer.ontrack = function(e) {
         self.onaddstream(e)
     };
 
@@ -102,21 +102,21 @@ function P2P(dest, side, myActive, yourActive) {
     }
 
     this.peer.oniceconnectionstatechange = function () {
-        if (self.peer){
+        if (self.peer) {
             self.oniceconnectionstatechange();
         } else {
-            console.log('ICE Connection STATE = .... u~n~... pc is null!' );
+            console.log('ICE Connection STATE = .... u~n~... pc is null!');
         }
     };
 
-    this.peer.onnegotiationneeded = function() {
+    this.peer.onnegotiationneeded = function () {
         console.log("ON NEGOTIATION NEEDED");
     }
 
 }
 
 // 候補
-P2P.prototype.onicecandidate = function(e) {
+P2P.prototype.onicecandidate = function (e) {
     if (!e.candidate) {
         // Candidateが全部終了
         console.log(`END-CANDIDATE: ${e.candidate}`);
@@ -137,16 +137,16 @@ P2P.prototype.onicecandidate = function(e) {
 }
 
 // ストリーム追加コールバック
-P2P.prototype.onaddstream = function(e) {
+P2P.prototype.onaddstream = function (e) {
     remoteVideoElms[this.dest].srcObject = e.stream;
     //remoteVideoElms[this.dest].srcObject = e.streams[0];
     //addVideo(this.dest, remoteVideoElms[this.dest]);
     console.log("EVENT onaddstream:" + e.toString());
 }
 
-P2P.prototype.onremovestream = function(e) {
+P2P.prototype.onremovestream = function (e) {
     console.log("EVENT onremovestream:" + e.toString());
-    e.stream.getTracks().forEach(function(track){
+    e.stream.getTracks().forEach(function (track) {
         track.stop();
     });
     delVideo(this.dest);
@@ -155,7 +155,7 @@ P2P.prototype.onremovestream = function(e) {
     //if(self.on_close) self.on_close();
 }
 
-P2P.prototype.oniceconnectionstatechange = function() {
+P2P.prototype.oniceconnectionstatechange = function () {
     //self.on_ice_state(self.peer.iceConnectionState);
     console.log('ICE Connection STATE=' + this.peer.iceConnectionState);
     switch (this.peer.iceConnectionState) {
@@ -184,30 +184,30 @@ P2P.prototype.offerStart = function (myActive, yourActive) {
     const p2pSelf = this;
     let options = {};
     if (myActive && !yourActive) {
-        options = {offerToReceiveVideo: true};
+        options = { offerToReceiveVideo: true };
     } else if (!myActive && yourActive) {
-        options = {offerToReceiveVideo: false};
+        options = { offerToReceiveVideo: false };
     }
     this.peer.createOffer(options)
-    .then(function (sessionDescription) {
-        return p2pSelf.peer.setLocalDescription(sessionDescription);
-    })
-    .then(function() {
-        const msg = {
-            "type": "offer",
-            "dest": p2pSelf.dest,
-            "src": myUid,
-            "sdp": p2pSelf.peer.localDescription,
-            "myActive": myActive,
-            "yourActive": yourActive
-        };
-        // SEND SDP :local -> remote
-        sendTo(JSON.stringify(msg));
-        //console.log("OFFERD SDP: " + JSON.stringify(p2pSelf.peer.localDescription));
-    })
-    .catch(function(error) {
-        console.log(error.name + ':' + error.message);
-    });
+        .then(function (sessionDescription) {
+            return p2pSelf.peer.setLocalDescription(sessionDescription);
+        })
+        .then(function () {
+            const msg = {
+                "type": "offer",
+                "dest": p2pSelf.dest,
+                "src": myUid,
+                "sdp": p2pSelf.peer.localDescription,
+                "myActive": myActive,
+                "yourActive": yourActive
+            };
+            // SEND SDP :local -> remote
+            sendTo(JSON.stringify(msg));
+            //console.log("OFFERD SDP: " + JSON.stringify(p2pSelf.peer.localDescription));
+        })
+        .catch(function (error) {
+            console.log(error.name + ':' + error.message);
+        });
 };
 
 function deletePcElm(id) {
@@ -226,7 +226,7 @@ function deletePcElm(id) {
     }
 }
 
-P2P.prototype.close = function(localOnly) {
+P2P.prototype.close = function (localOnly) {
     if (!localOnly) {
         console.log("CLOSE(local&remote)");
         sendTo(JSON.stringify({ type: "close", dest: this.dest, src: myUid }));
@@ -255,7 +255,7 @@ socketio.on("user_disconnect", function (msg) {
 
 // ユーザー削除
 function deleteUser(id) {
-    try{
+    try {
         console.log("DELETE USER: " + id);
         deletePcElm(id);
         delMenu(id);
@@ -302,7 +302,7 @@ function offer(dest, myActive, yourActive) {
     disableButton();
 
     deletePcElm(dest);
-	
+
     remoteVideoElms[dest] = newRemoteVideoElm(dest);
     remote_peers[dest] = new P2P(dest, "Offer", myActive, yourActive);
     remote_peers[dest].offerStart(myActive, yourActive);
@@ -322,7 +322,7 @@ function onOffer(msg) {
         disableButton();
 
         console.log("RECV: SDP");
-        
+
         deletePcElm(data.src);
 
         if (remote_peers[data.src] && remoteVideoElms[data.src]) {
@@ -342,8 +342,8 @@ function onOffer(msg) {
 
         let pc = remote_peers[data.src].peer;
         var remote_sdp = new RTCSessionDescription(data.sdp);
-    	//console.log("SET REMOTE_DESCRIPTION (ANSWESIDE): " + JSON.stringify(remote_sdp));
-        pc.setRemoteDescription(remote_sdp).then(function(){
+        //console.log("SET REMOTE_DESCRIPTION (ANSWESIDE): " + JSON.stringify(remote_sdp));
+        pc.setRemoteDescription(remote_sdp).then(function () {
             return pc.createAnswer();
         }).then(function (answer) {
             return pc.setLocalDescription(answer);
@@ -357,7 +357,7 @@ function onOffer(msg) {
             // SEND ANSWER :local -> remote
             sendTo(JSON.stringify(msg));
             //enableButton();
-        }).catch(function(error){
+        }).catch(function (error) {
             console.log(error.name + ':' + error.message);
             enableButton();
         });
@@ -378,14 +378,14 @@ function onAnswer(msg) {
         const remote_sdp = new RTCSessionDescription(data.sdp);
         //console.log("SET REMOTE_DESCRIPTION (OFFERSIDE): " + JSON.stringify(remote_sdp));
         remote_peers[data.src].peer.setRemoteDescription(remote_sdp)
-        .then(function() {
-            console.log("RECV: ANSWER -> setRemoteDescription");
-            //enableButton();
-        })
-        .catch(function(error) {
-            console.log("RECV: ANSWER -> setRemoteDescription ERROR: " + error);
-            enableButton();
-        });
+            .then(function () {
+                console.log("RECV: ANSWER -> setRemoteDescription");
+                //enableButton();
+            })
+            .catch(function (error) {
+                console.log("RECV: ANSWER -> setRemoteDescription ERROR: " + error);
+                enableButton();
+            });
     }
 };
 
@@ -411,11 +411,11 @@ function onNop(msg) {
 
 var branch = {
     //'request'   : onRequest,
-    'offer'     : onOffer,
-    'answer'    : onAnswer,
-    'candidate' : onCandidate,
-    'NO DATA'   : onNop,
-    'close'     : onClose,
+    'offer': onOffer,
+    'answer': onAnswer,
+    'candidate': onCandidate,
+    'NO DATA': onNop,
+    'close': onClose,
 }
 
 socketio.on("publish", function (msg) {
@@ -430,14 +430,14 @@ socketio.on("publish", function (msg) {
 // 自分のIDを全員に知らせる
 socketio.on("connect", function (msg) {
     //alert(`${myUid}として接続します。`);
-    setTimeout(function(){
+    setTimeout(function () {
         regist(myUid);
     }, 2000);
 });
 
 // registまでは、msg.idで着信する。
 // 他の人が登録した -
-socketio.on("regist", function(msg) {
+socketio.on("regist", function (msg) {
     console.log("SOCKET ON REGIST: " + msg);
 
     const data = JSON.parse(msg);
@@ -454,8 +454,8 @@ socketio.on("regist", function(msg) {
 var user_constraints = {
     video: {
         facingMode: "user",
-        width: 640,
-        height: 480,
+        width: 320,
+        height: 240,
         frameRate: 10,
     },
     audio: true
@@ -464,34 +464,34 @@ var user_constraints = {
 var hide_constraints = {
     video: {
         facingMode: "environment",
-        width: 640,
-        height: 480,
+        width: 320,
+        height: 240,
         frameRate: 10,
     },
     audio: true
 };
 
 
-function p2pInit(uid, constraints){
-    
-    if (!constraints){
+function p2pInit(uid, constraints) {
+
+    if (!constraints) {
         constraints = user_constraints;
     }
 
     // Local Video START
     navigator.mediaDevices.getUserMedia(constraints)
-    .then(function(stream){
-        localStream = stream;
-        localVideoElm.srcObject = localStream;
-        localVideoElm.play();        //必要
-        myCamera = true;
-        socketio.emit("camera", JSON.stringify({ id: uid, cam: myCamera }));
-    })
-    .catch(function (error){
-        myCamera = false;
-        socketio.emit("camera", JSON.stringify({ id: uid, cam: myCamera }));
-        console.log('ERROR: ' + error);
-    });
+        .then(function (stream) {
+            localStream = stream;
+            localVideoElm.srcObject = localStream;
+            localVideoElm.play();        //必要
+            myCamera = true;
+            socketio.emit("camera", JSON.stringify({ id: uid, cam: myCamera }));
+        })
+        .catch(function (error) {
+            myCamera = false;
+            socketio.emit("camera", JSON.stringify({ id: uid, cam: myCamera }));
+            console.log('ERROR: ' + error);
+        });
 }
 
 var face_flag = true;
@@ -502,7 +502,7 @@ function videoToggle() {
     }
     localStream.getTracks().forEach(t => t.stop());
 
-    setTimeout(function() {
+    setTimeout(function () {
         let constraints;
         if (face_flag) {
             face_flag = false;
@@ -512,38 +512,38 @@ function videoToggle() {
             constraints = user_constraints;
         }
         navigator.mediaDevices.getUserMedia(constraints)
-        .then(function(stream){
-            localStream = stream;
-            localVideoElm.srcObject = localStream;
-            localVideoElm.play();        //必要
+            .then(function (stream) {
+                localStream = stream;
+                localVideoElm.srcObject = localStream;
+                localVideoElm.play();        //必要
 
-            setTimeout(function() {
-                Object.keys(remote_peers).forEach(function (id) {
-                    const peer = remote_peers[id];
-                    peer.peer.getSenders().forEach(sender =>
-                        sender.replaceTrack(localStream.getTracks()[0])
-                    );
-                });
-            }, 1000);
-        })
-        .catch(function (error){
-            myCamera = false;
-            socketio.emit("camera", JSON.stringify({ id: uid, cam: myCamera }));
-            console.log('ERROR: ' + error);
-        });
+                setTimeout(function () {
+                    Object.keys(remote_peers).forEach(function (id) {
+                        const peer = remote_peers[id];
+                        peer.peer.getSenders().forEach(sender =>
+                            sender.replaceTrack(localStream.getTracks()[0])
+                        );
+                    });
+                }, 1000);
+            })
+            .catch(function (error) {
+                myCamera = false;
+                socketio.emit("camera", JSON.stringify({ id: uid, cam: myCamera }));
+                console.log('ERROR: ' + error);
+            });
 
     }, 1000);
 }
 
-localVideoElm.addEventListener('click', function(e){
+localVideoElm.addEventListener('click', function (e) {
     videoToggle();
 });
 
-$("video").on("loadedmetadata", function() {
+$("video").on("loadedmetadata", function () {
     console.log("VIDEOSIZE ID=" + this.id + ", W=" + this.videoWidth + ", H=" + this.videoHeight);
 })
 
-$("video").on("resize", function() {
+$("video").on("resize", function () {
     console.log("VIDEOSIZE(R) ID=" + this.id + ", W=" + this.videoWidth + ", H=" + this.videoHeight);
 })
 
@@ -558,7 +558,7 @@ function disableButton() {
         buttonEnableTimerId = null;
     }
     buttonEnable = false;
-    buttonEnableTimerId = setTimeout(function() {
+    buttonEnableTimerId = setTimeout(function () {
         buttonEnableTimerId = null;
         buttonEnable = true;
     }, 5000);
