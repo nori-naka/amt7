@@ -39,6 +39,16 @@ var eraseMode = false;
 
 refreshSecond = 600;        //ナウキャスト、天気図、台風を更新する間隔（秒）
 
+// サーバにログを送信する
+function LOG(msg) {
+    var log_msg = {
+        id: myUid,
+        text: msg
+    }
+    socketio.emit("log", JSON.stringify(log_msg));
+}
+
+
 // "ID:[Type, Lon, Lat]"
 // Type { 1:人、2:車 }
 // Lat, Lon { null:GPSを使用、数値:入力した緯度経度固定 }
@@ -727,6 +737,7 @@ function sendPositionRepeatedly() {
                     }
                     socketio.emit("renew", JSON.stringify(position));
                     last_position = position;
+                    LOG(`send position : ${position.lat}/${position.lng}`);
                 },
                 //Error
                 function (err) {
@@ -737,6 +748,7 @@ function sendPositionRepeatedly() {
                         3: "位置情報の取得に時間がかかり過ぎてタイムアウトしました。",
                     };
                     console.log("GEO_ERROR:" + errorMessage[err.code]);
+                    LOG(errorMessage[err.code]);
 
                     if (myUid in specials) {
                         // //テスト用
@@ -773,6 +785,7 @@ function sendPositionRepeatedly() {
                     }
                     //socketio.emit("renew", JSON.stringify(position));
                     socketio.emit("renew", JSON.stringify(last_position));
+                    LOG("GEOエラーのため、last_positionを送信しました");
                 },
                 //Options
                 geo_options
