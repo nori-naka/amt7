@@ -454,8 +454,8 @@ socketio.on("regist", function (msg) {
 var user_constraints = {
     video: {
         facingMode: "user",
-        width: 320,
-        height: 240,
+        width: 640,
+        height: 480,
         frameRate: 10,
     },
     audio: true
@@ -464,8 +464,8 @@ var user_constraints = {
 var hide_constraints = {
     video: {
         facingMode: "environment",
-        width: 320,
-        height: 240,
+        width: 640,
+        height: 480,
         frameRate: 10,
     },
     audio: true
