@@ -42,11 +42,31 @@ refreshSecond = 600;        //ナウキャスト、天気図、台風を更新�
 // サーバにログを送信する
 function LOG(msg) {
     var log_msg = {
-        id: myUid,
+        id: user_name ? user_name : myUid,
         text: msg
     }
     socketio.emit("log", JSON.stringify(log_msg));
 }
+
+var user_name = null;
+var input_name = function () {
+    var $input_name = document.getElementById("input_name");
+    var $name_ok_btn = document.getElementById("name_ok_btn");
+    var $name = document.getElementById("name");
+
+    $input_name.style.display = "block";
+    $name_ok_btn.addEventListener("click", function (ev) {
+        if ($name.value != "") {
+            user_name = $name.value;
+            document.getElementById("myVideoTitle").innerText = user_name;
+        } else {
+            user_name = myUid;
+        }
+        $input_name.style.display = "none";
+    });
+}
+input_name();
+
 
 
 // "ID:[Type, Lon, Lat]"
@@ -565,6 +585,7 @@ function curPos(uid) {
         lat: null,
         lng: null,
         cam: myCamera,
+        name: user_name
     };
     socketio.emit("renew", JSON.stringify(position));
 
@@ -587,7 +608,8 @@ function curPos(uid) {
                             id: uid,
                             lat: _pos.coords.latitude,
                             lng: _pos.coords.longitude,
-                            cam: myCamera
+                            cam: myCamera,
+                            name: uid
                         };
                     } else {
                         position = {
@@ -595,6 +617,7 @@ function curPos(uid) {
                             lat: specials[uid][2],
                             lng: specials[uid][1],
                             cam: myCamera,
+                            name: uid
                         };
                     }
                 } else {
@@ -608,7 +631,8 @@ function curPos(uid) {
                         //テスト用
                         //lat: mapCenterCoord[1] + Math.random() * 0.02,
                         //lng: mapCenterCoord[0] + Math.random() * 0.02,
-                        cam: myCamera
+                        cam: myCamera,
+                        name: uid
                     };
                 }
                 socketio.emit("renew", JSON.stringify(position));
@@ -635,6 +659,7 @@ function curPos(uid) {
                         lat: specials[uid][2],
                         lng: specials[uid][1],
                         cam: myCamera,
+                        id: uid
                     };
                 } else {
                     position = {
@@ -642,6 +667,7 @@ function curPos(uid) {
                         lat: null,
                         lng: null,
                         cam: myCamera,
+                        name: user_name
                     };
                 }
                 //テスト用
@@ -678,120 +704,77 @@ function sendPositionRepeatedly() {
         //     position.lat += (Math.random() - 0.5) * 0.003;
         // }
         position.cam = myCamera;
+        position.name = user_name;
         socketio.emit("renew", JSON.stringify(position));
         //console.log("RENEW SEND: " + JSON.stringify(position));
         //console.log(position);
     }, 1000);
 
     // 10秒間隔でGPS測定
-    setInterval(function () {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                //Success
-                function (_pos) {
-                    ////テスト用
-                    //let latPos;
-                    //let lngPos;
-                    // if (position.lat != null && position.lng != null) {
-                    //     if (Math.random() < 0.1) {
-                    //         latPos = position.lat + (Math.random() - 0.5) * 0.003;
-                    //         lngPos = position.lng + (Math.random() - 0.5) * 0.003;
-                    //     } else {
-                    //         latPos = position.lat;
-                    //         lngPos = position.lng;
-                    //     }
-                    // } else {
-                    //     latPos = _pos.coords.latitude + Math.random() * 0.02;
-                    //     lngPos = _pos.coords.longitude + Math.random() * 0.02;
-                    // }
-                    /*
-                                        if (myUid in specials) {
-                                        } else {
-                    */
-                    if (myUid in specials) {
-                        if ((specials[myUid][2] == null) || (specials[myUid][1] == null)) {
-                            position = {
-                                id: myUid,
-                                lat: _pos.coords.latitude,
-                                lng: _pos.coords.longitude,
-                                cam: myCamera
-                            };
-                        } else {
-                            position = {
-                                id: myUid,
-                                lat: specials[myUid][2],
-                                lng: specials[myUid][1],
-                                cam: myCamera,
-                            };
-                        }
-                    } else {
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(
+            //Success
+            function (_pos) {
+                if (myUid in specials) {
+                    if ((specials[myUid][2] == null) || (specials[myUid][1] == null)) {
                         position = {
                             id: myUid,
                             lat: _pos.coords.latitude,
                             lng: _pos.coords.longitude,
-                            ////テスト用
-                            //lat: latPos,
-                            //lng: lngPos,
-                            cam: myCamera
+                            cam: myCamera,
+                            name: myUid
                         };
-                    }
-                    socketio.emit("renew", JSON.stringify(position));
-                    last_position = position;
-                    LOG(`send position : ${position.lat}/${position.lng}`);
-                },
-                //Error
-                function (err) {
-                    var errorMessage = {
-                        0: "原因不明のエラーが発生しました。",
-                        1: "位置情報の取得が許可されませんでした。",
-                        2: "電波状況などで位置情報が取得できませんでした。",
-                        3: "位置情報の取得に時間がかかり過ぎてタイムアウトしました。",
-                    };
-                    console.log("GEO_ERROR:" + errorMessage[err.code]);
-                    LOG(errorMessage[err.code]);
-
-                    if (myUid in specials) {
-                        // //テスト用
-                        // let latPos;
-                        // let lngPos;
-                        // if (position.lat != null && position.lng != null) {
-                        //     if (Math.random() < 0.1) {
-                        //         latPos = position.lat + (Math.random() - 0.5) * 0.003;
-                        //         lngPos = position.lng + (Math.random() - 0.5) * 0.003;
-                        //     } else {
-                        //         latPos = position.lat;
-                        //         lngPos = position.lng;
-                        //     }
-                        // } else {
-                        //     latPos = specials[myUid][2] + (Math.random() - 0.5) * 0.003;
-                        //     lngPos = specials[myUid][1] + (Math.random() - 0.5) * 0.003;
-                        // }
-                        // position = {
-                        //     id: myUid,
-                        //     // lat: _pos.coords.latitude,
-                        //     // lng: _pos.coords.longitude,
-                        //     //テスト用
-                        //     lat: latPos,
-                        //     lng: lngPos,
-                        //     cam: myCamera
-                        // };
                     } else {
                         position = {
                             id: myUid,
-                            lat: null,
-                            lng: null,
-                            cam: myCamera
+                            lat: specials[myUid][2],
+                            lng: specials[myUid][1],
+                            cam: myCamera,
+                            name: myUid
                         };
                     }
-                    //socketio.emit("renew", JSON.stringify(position));
-                    socketio.emit("renew", JSON.stringify(last_position));
-                    LOG("GEOエラーのため、last_positionを送信しました");
-                },
-                //Options
-                geo_options
-            );
-        }
-    }, 1000);
+                } else {
+                    position = {
+                        id: myUid,
+                        lat: _pos.coords.latitude,
+                        lng: _pos.coords.longitude,
+                        cam: myCamera,
+                        name: user_name
+                    };
+                }
+                socketio.emit("renew", JSON.stringify(position));
+                last_position = position;
+                LOG(`send position : ${position.lat}/${position.lng}`);
+            },
+            //Error
+            function (err) {
+                var errorMessage = {
+                    0: "原因不明のエラーが発生しました。",
+                    1: "位置情報の取得が許可されませんでした。",
+                    2: "電波状況などで位置情報が取得できませんでした。",
+                    3: "位置情報の取得に時間がかかり過ぎてタイムアウトしました。",
+                };
+                console.log("GEO_ERROR:" + errorMessage[err.code]);
+                LOG(errorMessage[err.code]);
+
+                if (myUid in specials) {
+                } else {
+                    position = {
+                        id: myUid,
+                        lat: null,
+                        lng: null,
+                        cam: myCamera,
+                        name: user_name
+                    };
+                }
+                //socketio.emit("renew", JSON.stringify(position));
+                socketio.emit("renew", JSON.stringify(last_position));
+                LOG("GEOエラーのため、last_positionを送信しました");
+            },
+            //Options
+            geo_options
+        );
+    }
 }
 
 function getIconMapLayer() {
@@ -799,11 +782,13 @@ function getIconMapLayer() {
     return iconLayer;
 }
 
-function changeMapIconPosition(userId, lng, lat) {
-    const feature = getIconMapLayer().getSource().getFeatures().find(f => f.get("id") == userId);
+function changeMapIconPosition(userId, lng, lat, name) {
+    // const feature = getIconMapLayer().getSource().getFeatures().find(f => f.get("id") == userId);
+    const feature = getIconMapLayer().getSource().getFeatures().find(f => f.__$id__ == userId);
     if (feature) {
         const iconPoint = (new ol.geom.Point([lng, lat])).transform('EPSG:4326', 'EPSG:3857');
         feature.set("geometry", iconPoint);
+        feature.set("id", name);
         //--------------------------------------------------------------
         // by Nori 2018.11.20
         if (feature.__$clear_id__) {
@@ -825,7 +810,8 @@ function changeMapIconPosition(userId, lng, lat) {
 
 function deleteMapIcon(userId) {
     const source = getIconMapLayer().getSource();
-    const feature = source.getFeatures().find(f => f.get("id") == userId);
+    // const feature = source.getFeatures().find(f => f.get("id") == userId);
+    const feature = source.getFeatures().find(f => f.__$id__ == userId)
     if (feature) {
         source.removeFeature(feature);
         //--------------------------------------------------------------
@@ -837,7 +823,7 @@ function deleteMapIcon(userId) {
     }
 }
 
-function addMapIcon(userId, lng, lat) {
+function addMapIcon(userId, lng, lat, name) {
     if (lng == null) {
         return;
     }
@@ -846,10 +832,11 @@ function addMapIcon(userId, lng, lat) {
     const newFeature = new ol.Feature({
         geometry: iconPoint,
         name: "icon",
-        id: userId,
+        id: name,
         //sel: userId == myUid ? true : false,
         location: getLocation(userId),
     });
+    newFeature.__$id__ = userId;
     //--------------------------------------------------------------
     // by Nori 2018.11.20
     if (userId == myUid) {
@@ -876,12 +863,20 @@ function onReceiveRenew(msg) {
         if (serverData[userId]) {
             const serverLng = serverData[userId].lng;
             const serverLat = serverData[userId].lat;
+            const serverName = serverData[userId].name;
+
+            // menu title
+            if (myUid != userId && serverName != document.getElementById(`menu_${userId}`).innerText) {
+                changeMenu_name(userId, serverName);
+            }
+
+            // icon
             if (users[userId].lng == null) {
                 if (serverLng == null) {
                     //null->nullなら何もしない
                 } else {
                     //null->位置ありなのでアイコン作成
-                    addMapIcon(userId, serverData[userId].lng, serverData[userId].lat);
+                    addMapIcon(userId, serverData[userId].lng, serverData[userId].lat, serverData[userId].name);
                 }
             } else {
                 if (serverLng == null) {
@@ -889,14 +884,15 @@ function onReceiveRenew(msg) {
                     deleteMapIcon(userId);
                 } else {
                     //必要なら位置変更
-                    if (serverLng != users[userId].lng || serverLat != users[userId].lat) {
-                        changeMapIconPosition(userId, serverLng, serverLat);
+                    if (serverLng != users[userId].lng || serverLat != users[userId].lat || serverName != users[userId].name) {
+                        changeMapIconPosition(userId, serverLng, serverLat, serverName);
                     }
                 }
             }
             delete serverData[userId];  //処理済
         } else {
             deleteUser(userId);
+            deleteMapIcon(userId);
         }
     });
 
@@ -904,7 +900,7 @@ function onReceiveRenew(msg) {
         if (userId != myUid) {
             addMenu(userId);
         }
-        addMapIcon(userId, serverData[userId].lng, serverData[userId].lat);
+        addMapIcon(userId, serverData[userId].lng, serverData[userId].lat, serverData[userId].name);
     });
 
     // サーバーのデータを現在ユーザデータとする。
@@ -932,7 +928,7 @@ function deleteUserIcon(id) {
 //////////////////////////////////////////////////////////////////////////////////////
 
 window.onresize = function () {
-    setRemoteBox();
+    // setRemoteBox();
 };
 
 

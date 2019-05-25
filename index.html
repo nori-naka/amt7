@@ -25,12 +25,24 @@
 
 <body>
   <div id='map'></div>
-  <div id="localBox">
+  <div id="localBox" class="video_width">
     <div class="videoTitle" id="myVideoTitle">My ID</div>
     <video id='local_video' autoplay loop muted playsinline></video>
   </div>
-  <div id="remoteBox">
+  <div id="remoteBox" class="video_width">
     <div id="remote"></div>
+  </div>
+
+  <!--
+  input_name add 2019.05.24
+-->
+  <div id="input_name" sytle="display: none" class="input_name">
+    <div class="box-title">LOGIN</div>
+    <p>
+      <label>NAME:</label>
+      <input type="text" id="name" class="text">
+      <button id="name_ok_btn" class="a_button" type="button">OK</button>
+    </p>
   </div>
 
   <div id="commuDialog">
@@ -204,7 +216,7 @@
   <script>
     init_user_id = "initial_user_id";
     window.onload = function () {
-      setVideoSize();
+      // setVideoSize();
       myUid = login();
       p2pInit(myUid);
       disp_init();

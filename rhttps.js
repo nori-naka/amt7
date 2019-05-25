@@ -3,7 +3,7 @@ var SSL_KEY = 'server.key';
 var SSL_CERT = 'server.crt';
 
 var keepAliveStart = false;
-var ttlVal = 3;
+var ttlVal = 5;
 var keepAliveTime = (new Date()).getTime();
 
 var path = require('path');
@@ -117,7 +117,7 @@ io.on("connection", function (socket) {
     // P2P開始
     socket.on("start", function (msg) {
         var data = JSON.parse(msg);
-        console.log(`ON START: ${data.src} -> ${data.dest}  MSG=${msg}`);
+        // console.log(`ON START: ${data.src} -> ${data.dest}  MSG=${msg}`);
         if (data.dest) {
             socket.to(user_sid[data.dest]).emit("start", JSON.stringify({ id: data.src }));
         } else {
@@ -140,10 +140,10 @@ io.on("connection", function (socket) {
     // 位置情報着信
     socket.on("renew", function (msg) {
         var data = JSON.parse(msg);
-        //console.log(`ON RENEW : From=${data.id} LAT=${data.lat} LNG=${data.lng} CAM=${data.cam}`);
+        // console.log(`ON RENEW : From=${data.id} LAT=${data.lat} LNG=${data.lng} CAM=${data.cam} NAME=${data.name}`);
 
         if (data.id) {
-            userHash[data.id] = { lat: data.lat, lng: data.lng, ttl: ttlVal, cam: data.cam };
+            userHash[data.id] = { lat: data.lat, lng: data.lng, ttl: ttlVal, cam: data.cam, name: data.name };
             //console.log("RECIVE:USERHASH=" + JSON.stringify(userHash));
         }
     });
@@ -158,7 +158,7 @@ io.on("connection", function (socket) {
                 userHash[data.id].cam = data.cam;
                 //userHash[data.id].cam = true;
             } else {
-                userHash[data.id] = { lat: null, lng: null, ttl: ttlVal, cam: data.cam };
+                userHash[data.id] = { lat: null, lng: null, ttl: ttlVal, cam: data.cam, name: data.name };
                 //userHash[data.id] = { lat: null, lng: null, ttl: ttlVal, cam: true };
             }
         }
@@ -209,7 +209,7 @@ io.on("connection", function (socket) {
 
     setInterval(function () {
         socket.emit("renew", JSON.stringify(userHash));
-        //console.log(`SEND RENEW : USERHASH=${JSON.stringify(userHash)}`);
+        // console.log(`SEND RENEW : USERHASH=${JSON.stringify(userHash)}`);
         //console.log(`SEND RENEW : USER_SID=${JSON.stringify(user_sid)}`);
         //console.log("TIME: " + (new Date()).getTime());
 

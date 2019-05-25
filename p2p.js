@@ -17,7 +17,9 @@ var newRemoteVideoElm = function (id) {
     var video_elem = document.createElement("video");
     //video_elem.muted = true;
     video_elem.setAttribute("playsinline", true);
-    video_elem.width = videoWidth; //"320";
+    // video_elem.width = videoWidth; //"320";
+    // video_elem.style.width = "100%"; //"320";
+    video_elem.classList.add("remote_video");
     video_elem.autoplay = true;
     //video_elem.controls = true;
     video_elem.onclick = function () {
@@ -454,8 +456,8 @@ socketio.on("regist", function (msg) {
 var user_constraints = {
     video: {
         facingMode: "user",
-        width: 640,
-        height: 480,
+        width: 320,
+        // height: 480,
         frameRate: 10,
     },
     audio: true
@@ -464,8 +466,8 @@ var user_constraints = {
 var hide_constraints = {
     video: {
         facingMode: "environment",
-        width: 640,
-        height: 480,
+        width: 320,
+        // height: 480,
         frameRate: 10,
     },
     audio: true
@@ -486,6 +488,9 @@ function p2pInit(uid, constraints) {
             localVideoElm.play();        //必要
             myCamera = true;
             socketio.emit("camera", JSON.stringify({ id: uid, cam: myCamera }));
+
+            LOG(`AUDIO SETTING=${JSON.stringify(localStream.getAudioTracks()[0].getSettings(), null, 4)}`);
+            LOG(`VIDEO SETTING=${JSON.stringify(localStream.getVideoTracks()[0].getSettings(), null, 4)}`);
         })
         .catch(function (error) {
             myCamera = false;
@@ -516,6 +521,9 @@ function videoToggle() {
                 localStream = stream;
                 localVideoElm.srcObject = localStream;
                 localVideoElm.play();        //必要
+
+                LOG(`AUDIO SETTING=${JSON.stringify(localStream.getAudioTracks()[0].getSettings())}`);
+                LOG(`VIDEO SETTING=${JSON.stringify(localStream.getVideoTracks()[0].getSettings())}`);
 
                 setTimeout(function () {
                     Object.keys(remote_peers).forEach(function (id) {
