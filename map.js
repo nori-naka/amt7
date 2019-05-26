@@ -55,7 +55,7 @@ var input_name = function () {
     var $name = document.getElementById("name");
 
     $input_name.style.display = "block";
-    $name_ok_btn.addEventListener("click", function (ev) {
+    var input_name_change = function () {
         if ($name.value != "") {
             user_name = $name.value;
             document.getElementById("myVideoTitle").innerText = user_name;
@@ -63,7 +63,12 @@ var input_name = function () {
             user_name = myUid;
         }
         $input_name.style.display = "none";
+    }
+    $name_ok_btn.addEventListener("click", input_name_change);
+    $input_name.addEventListener("keydown", function (e) {
+        if (e.keyCode == 13) input_name_change();
     });
+
 }
 input_name();
 

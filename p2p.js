@@ -458,7 +458,7 @@ var user_constraints = {
         facingMode: "user",
         width: 320,
         // height: 480,
-        frameRate: 10,
+        frameRate: { min: 1, max: 10 },
     },
     audio: true
 };
@@ -468,7 +468,7 @@ var hide_constraints = {
         facingMode: "environment",
         width: 320,
         // height: 480,
-        frameRate: 10,
+        frameRate: { min: 1, max: 10 },
     },
     audio: true
 };
