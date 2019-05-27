@@ -473,6 +473,7 @@ var hide_constraints = {
     audio: true
 };
 
+var local_recorder = null;
 
 function p2pInit(uid, constraints) {
 
@@ -491,6 +492,10 @@ function p2pInit(uid, constraints) {
 
             LOG(`AUDIO SETTING=${JSON.stringify(localStream.getAudioTracks()[0].getSettings(), null, 4)}`);
             LOG(`VIDEO SETTING=${JSON.stringify(localStream.getVideoTracks()[0].getSettings(), null, 4)}`);
+
+            $rec_btn = document.getElementById("rec_btn");
+            local_recorder = new Record(localVideoElm, myUid, $rec_btn);
+
         })
         .catch(function (error) {
             myCamera = false;

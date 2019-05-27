@@ -22,7 +22,7 @@ var hazerdMapLayer;
 
 var freeDraw = null;
 
-users = {};
+var users = {};
 
 const buttonBlue = "#38a2c0";
 const buttonRed = "#c03838";
@@ -49,6 +49,7 @@ function LOG(msg) {
 }
 
 var user_name = null;
+
 var input_name = function () {
     var $input_name = document.getElementById("input_name");
     var $name_ok_btn = document.getElementById("name_ok_btn");
@@ -374,6 +375,7 @@ function showMap() {
     initDraw();
     initFreeErase();
 
+    var undo_func = null;
     map.on("click", function (e) {
 
         if (eraseMode) {
@@ -383,6 +385,11 @@ function showMap() {
         if (sizeMode) {
             sizeBtnEnd();
             return;
+        }
+
+        if (undo_func) {
+            undo_func();
+            undo_func = null;
         }
 
         let iconClick = false;
@@ -860,6 +867,8 @@ function addMapIcon(userId, lng, lat, name) {
 
 function onReceiveRenew(msg) {
     //console.log(msg);
+    if (!iconLayer) return;
+
     const serverData = JSON.parse(msg);
     if (Object.keys(serverData).length == 0) {
         return;
@@ -1618,9 +1627,20 @@ function refreshNowcastLayer(diffHour) {
     source.updateParams(params);
 }
 
+var memo_flag = false;
+$("#memoBtn").on("click", function () {
+    if (memo_flag) {
+        memo_flag = false;
+        $("#map").css({ "cursor": "auto" });
+    } else {
+        memo_flag = true;
+        $("#map").css({ "cursor": "cell" });
+    }
+});
+
 $("#patBtn").on("click", function () {
     sidebox_show(JISYOU_LAYER.menu_html);
-})
+});
 
 var sidebox_elm = document.getElementById('sidebox');
 var sidebox_in_elm = document.getElementById('sidebox_in');

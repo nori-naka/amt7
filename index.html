@@ -26,7 +26,10 @@
 <body>
   <div id='map'></div>
   <div id="localBox" class="video_width">
-    <div class="videoTitle" id="myVideoTitle">My ID</div>
+    <div class="title_box">
+      <div class="videoTitle" id="myVideoTitle">My ID</div>
+      <div class="rec_btn" id="rec_btn">REC</div>
+    </div>
     <video id='local_video' autoplay loop muted playsinline></video>
   </div>
   <div id="remoteBox" class="video_width">
@@ -79,12 +82,13 @@
     <button class="circle menuButton" id="weathBtn">
       <img src="/pic/0.5x/menu_weather@0,5x.png" class="btnImg">
     </button>
-    <button class="circle menuButton" id="patBtn">
-      <!-- <img src="/pic/0.5x/menu_pato@0,5x.png" class="btnImg"> -->
-      <!--
-      <img src="/images/menu_jisyou.png" class="btnImg">
-      -->
-    </button>
+    <!-- <button class="circle menuButton" id="patBtn">
+      <img src="/pic/0.5x/menu_pato@0,5x.png" class="btnImg">
+      <img src="/images/menu_jisyou.png" class="btnImg">     
+    </button> -->
+    <!-- <button class="circle menuButton" id="memoBtn">
+      <img src="/pic/0.5x/menu_txt@0,5x.png" class="btnImg">
+    </button> -->
 
     <button class="circle menuButton" id="backBtn">
       <img src="/pic/0.5x/menu_return@0,5x.png" class="btnImg">
@@ -177,11 +181,11 @@
       <img src="pic/dialog/select_yes.png" id="OnOffHazerdMap">
       <input type="range" min="0" max="100" value="100" class="slider2" id="sliderHazerdMap">
     </div>
-    <div class="layerDialogContent">
+    <!-- <div class="layerDialogContent">
       <span>みちパト</span>
       <img src="pic/dialog/select_yes.png" id="OnOffPat">
       <input type="range" min="0" max="100" value="100" class="slider2" id="sliderPat">
-    </div>
+    </div> -->
     <button class="circle menuButton" id="backBtn2">
       <img src="/pic/0.5x/etc_close@0,5x.png" class="btnImg">
     </button>
@@ -205,9 +209,17 @@
   <script src="menu.js"></script>
   <script src='p2p.js'></script>
   <script src="flip.js"></script>
+  <script src="RECORD_layer/record.js"></script>
   <script src="map.js"></script>
+  <script src="RECORD_layer/RECORD_layer.js"></script>
   <script src="exif.js"></script>
   <script src="beacon.js"></script>
+
+  <!--
+    record.jsはp2p.jsの後、
+    RECORD_layer.jsはmap.jsの後にロードする
+  -->
+
   <!--
 <script src="JISYOU_LAYER.js"></script>
 -->
@@ -229,6 +241,7 @@
       }
       $("#myVideoTitle").html(myUid);
       //JISYOU_LAYER.add();
+      RECORD_layer.add();
     }
   </script>
 </body>
