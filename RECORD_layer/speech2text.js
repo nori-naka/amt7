@@ -22,10 +22,12 @@ const toggle_speech2text = function (ev) {
     }
 }
 
-var $_textarea = null;
-const speech2text = function ($btn, $textarea) {
+var $textarea = null;
+var $btn = null;
+const speech2text = function (btn, textarea) {
+    $btn = btn;
     $btn.addEventListener("click", toggle_speech2text);
-    $_textarea = $textarea;
+    $textarea = textarea;
 }
 
 recognition.onresult = (event) => {
