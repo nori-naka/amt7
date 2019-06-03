@@ -20,7 +20,7 @@ var mime = {
 
 var json_filename = "./RECORD_layer/position.json";
 var out_str = fs.readFileSync(json_filename, 'utf8')
-var position_array = JSON.parse(out_str)
+var position_hash = JSON.parse(out_str)
 
 var options = {
     key: fs.readFileSync(SSL_KEY).toString(),
@@ -35,9 +35,20 @@ var allDraw = [];
 var server = require("https").createServer(options, function (req, res) {
     var urlParse = url.parse(req.url, true);
 
+    // User-Agent : WebView detected
+    var ua_str = JSON.stringify(req.headers['user-agent'])
+    // console.log("ua is " + ua_str);
+    var re = /.+\swv\).+/
+    var is_webview = ua_str.match(re);
+
+
     var filePath;
-    if (urlParse.pathname == '/') {
-        filePath = '/index.html';
+    if (urlParse.pathname == '/' || urlParse.pathname == '/index.html') {
+        if (is_webview) {
+            filePath = '/index_wv.html';
+        } else {
+            filePath = '/index.html';
+        }
     } else {
         filePath = decodeURI(urlParse.pathname);
     }
@@ -78,6 +89,12 @@ var user_sid = {};
 //   id : socket_id,
 // }
 //-------------------------------------------------------------
+
+var getUniqueStr = function (myStrong) {
+    var strong = 10;
+    if (myStrong) strong = myStrong;
+    return new Date().getTime().toString(16) + Math.floor(strong * Math.random()).toString(16)
+}
 
 // イベントの定義
 io.on("connection", function (socket) {
@@ -133,38 +150,63 @@ io.on("connection", function (socket) {
     });
 
 
-    // position_array
-    // [
-    //    { "経度情報": "XXX", "緯度情報": "YYY", "年月日": "YYYY/MM/DD", "video": "/movie/file_name.webm" }
-    //    { "経度情報": "XXX", "緯度情報": "YYY", "年月日": "YYYY/MM/DD", "video": "/movie/file_name.webm" }
-    // ]
+    // position_hash = 
+    // {
+    //    XXXX: { "user_name": "xxx", "経度情報": "XXX", "緯度情報": "YYY", "年月日": "YYYY/MM/DD", "video": "/movie/file_name.webm" },
+    //    XXXY: { "user_name": "xxx", "経度情報": "XXX", "緯度情報": "YYY", "年月日": "YYYY/MM/DD", "video": "/movie/file_name.webm" },
+    // }
 
     // クライアントから送信されるデータ（画像データ含む）
     // {
-    //     name: `${local_id}_${Date.now()}.webm`,
+    //     user_name: XXXXX,
+    //     name: `${local_id}_${Date.now()}.webm`,  (video only)
     //     lat: position.lat,
     //     lng: position.lng,
     //     date: new Date().toLocaleString(),
-    //     blob: b64
+    //     blob: b64, (video only)
+    //     memo: XXX,  (memo only)
+    //     delete: xxxx (delete only. xxxx is id)
     // }
 
     socket.on("file", function (msg) {
 
-        // console.log(msg);
+        console.log(`FILE on ${msg}`);
         var data = JSON.parse(msg);
 
-        console.log(`FILE=${data.name}`)
-        // console.log(data.blob)
+        if (data.delete) {
+            delete position_hash[data.delete];
 
-        var file_content = data.blob.replace(/^data:video\/webm;base64,/, "")
-        fs.writeFile(`${__dirname}/movie/${data.name}`, file_content, "base64", function (err) {
-            console.log(`socket.on_file: video_file write err=${err}`);
-        });
+        } else if (data.blob) {
+            console.log(`FILE=${data.name}`)
+            // console.log(data.blob)
 
-        position_array.push({ "経度情報": data.lng, "緯度情報": data.lat, "年月日": data.date, "video": "/movie/" + data.name });
-        fs.writeFile(json_filename, JSON.stringify(position_array), function (err) {
-            console.log(`socket.on_file: position_array write err=${err}`);
+            // video file save
+            var file_content = data.blob.replace(/^data:video\/webm;base64,/, "")
+            fs.writeFile(`${__dirname}/movie/${data.name}`, file_content, "base64", function (err) {
+                console.log(`socket.on_file: video_file write err=${err}`);
+            });
+
+            // position_hash file save
+            position_hash[getUniqueStr()] = {
+                "記録者": data.user_name,
+                "経度情報": data.lng,
+                "緯度情報": data.lat,
+                "年月日": data.date,
+                "video": "/movie/" + data.name
+            };
+        } else {
+            position_hash[getUniqueStr()] = {
+                "記録者": data.user_name,
+                "経度情報": data.lng,
+                "緯度情報": data.lat,
+                "年月日": data.date,
+                "memo": data.memo
+            };
+        }
+        fs.writeFile(json_filename, JSON.stringify(position_hash), function (err) {
+            console.log(`socket.on_file: position_hash write err=${err}`);
         })
+
     });
 
 

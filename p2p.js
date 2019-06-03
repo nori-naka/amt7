@@ -21,6 +21,7 @@ var newRemoteVideoElm = function (id) {
     // video_elem.style.width = "100%"; //"320";
     video_elem.classList.add("remote_video");
     video_elem.autoplay = true;
+    video_elem.muted = false;
     //video_elem.controls = true;
     video_elem.onclick = function () {
         if (this.webkitDisplayingFullscreen) {
@@ -474,6 +475,7 @@ var hide_constraints = {
 };
 
 var local_recorder = null;
+var $rec_btn = document.getElementById("rec_btn");
 
 function p2pInit(uid, constraints) {
 
@@ -488,17 +490,15 @@ function p2pInit(uid, constraints) {
             localVideoElm.srcObject = localStream;
             localVideoElm.play();        //必要
             myCamera = true;
-            socketio.emit("camera", JSON.stringify({ id: uid, cam: myCamera }));
+            socketio.emit("camera", JSON.stringify({ id: myUid, cam: myCamera }));
+
+            local_recorder = new Record(localStream, myUid, $rec_btn);
 
             LOG(`AUDIO SETTING=${JSON.stringify(localStream.getAudioTracks()[0].getSettings(), null, 4)}`);
             LOG(`VIDEO SETTING=${JSON.stringify(localStream.getVideoTracks()[0].getSettings(), null, 4)}`);
-
-            $rec_btn = document.getElementById("rec_btn");
-            local_recorder = new Record(localVideoElm, myUid, $rec_btn);
-
         })
         .catch(function (error) {
-            myCamera = false;
+            //myCamera = false;
             socketio.emit("camera", JSON.stringify({ id: uid, cam: myCamera }));
             console.log('ERROR: ' + error);
         });
@@ -527,6 +527,9 @@ function videoToggle() {
                 localVideoElm.srcObject = localStream;
                 localVideoElm.play();        //必要
 
+                local_recorder.remove();
+                local_recorder = new Record(localStream, myUid, $rec_btn);
+
                 LOG(`AUDIO SETTING=${JSON.stringify(localStream.getAudioTracks()[0].getSettings())}`);
                 LOG(`VIDEO SETTING=${JSON.stringify(localStream.getVideoTracks()[0].getSettings())}`);
 
@@ -541,7 +544,7 @@ function videoToggle() {
             })
             .catch(function (error) {
                 myCamera = false;
-                socketio.emit("camera", JSON.stringify({ id: uid, cam: myCamera }));
+                socketio.emit("camera", JSON.stringify({ id: myUid, cam: myCamera }));
                 console.log('ERROR: ' + error);
             });
 

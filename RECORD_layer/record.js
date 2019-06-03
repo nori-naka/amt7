@@ -24,54 +24,47 @@ const upload = function (json_data) {
 }
 
 
-const Record = function ($video, id, $start_btn, $playback_video, $playback_btn) {
+const Record = function (stream, id, $start_btn, $playback_video, $playback_btn) {
     const self = this;
 
-    this.$video = $video;
     this.$start_btn = $start_btn;
     this.$playback_video = $playback_video;
     this.$playback_btn = $playback_btn;
 
     this.blobUrl = null;
 
-    this.recorder = new MediaRecorder(this.$video.srcObject);
+    this.recorder = new MediaRecorder(stream);
     this.recorder.ondataavailable = function (ev) {
+        try {
+            var blob = new Blob([ev.data], { type: "video/webm" });
+            var reader = new FileReader();
+            reader.onload = function () {
 
-        // this.blobUrl = URL.createObjectURL(new Blob([ev.data], { type: "video/webm" }))
+                var b64 = reader.result;
+                console.log(b64);
+                upload({
+                    user_name: users[id].name,
+                    name: `${users[id].name}_${Date.now()}.webm`,
+                    lat: users[id].lat,
+                    lng: users[id].lng,
+                    date: new Date().toLocaleString(),
+                    blob: b64
+                });
 
-        // let a = document.createElement("a");
-        // a.href = this.blobUrl;
-        // a.download = `${local_id}_${Date.now()}.webm`;
-        // a.click();
-        // URL.revokeObjectURL(this.blobUrl);
+            }
+            reader.readAsDataURL(blob);
+            this.blobUrl = null;
 
-
-        var blob = new Blob([ev.data], { type: "video/webm" });
-        var reader = new FileReader();
-        reader.onload = function () {
-            var b64 = reader.result;
-            console.log(b64);
-            upload({
-                name: `${users[id].name}_${Date.now()}.webm`,
-                lat: users[id].lat,
-                lng: users[id].lng,
-                date: new Date().toLocaleString(),
-                blob: b64
-            });
-
+        } catch (err) {
+            LOG(`Record ERROR = ${err}`);
+            this.recorder.stop();
+            this.$start_btn.innerText = "REC";
         }
-        reader.readAsDataURL(blob);
-
-        // const reader = new FileReader();
-        // reader.onload = function () {
-        //     b64 = reader.result;
-        //     console.log(b64);
-        // }
-        // reader.readAsDataURL(new Blob([ev.data], { type: "video/webm" }));
-
     }
 
-    this.$start_btn.onclick = function (ev) {
+    const handler_start = function (ev) {
+        ev.preventDefault();
+
         if (self.$start_btn.innerText == "REC") {
             self.recorder.start();
             self.$start_btn.innerText = "STOP";
@@ -79,7 +72,14 @@ const Record = function ($video, id, $start_btn, $playback_video, $playback_btn)
             self.recorder.stop();
             self.$start_btn.innerText = "REC";
         }
-    }
+    };
+    this.$start_btn.onclick = handler_start;
+}
+
+Record.prototype.remove = function () {
+    this.$start_btn.removeEventListener("click", this.handler_start);
+    // this.recorder.stop();
+    this.$start_btn.innerText = "REC";
 }
 
 Record.prototype.play = function () {

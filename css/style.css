@@ -57,7 +57,7 @@ body {
 .text {
     font-family: 'Avenir','Helvetica Neue','Helvetica','Arial','Hiragino Sans','ヒラギノ角ゴシック',YuGothic,'Yu Gothic','メイリオ', Meiryo,'ＭＳ Ｐゴシック','MS PGothic';
     font-size: 20px;
-    height: 24px;
+    /* height: 24px; */
 }
 
 
@@ -133,6 +133,7 @@ body {
     width: 80px;
     height: 100%;
     cursor:pointer;
+    z-index: 150;
 }
 
 .remote_video{
@@ -297,6 +298,16 @@ img.btnImg {
     left: 0px;
     width: 100%;
     height: 100%;
+}
+
+img.btn50Img {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
 }
 
 button.circle:active {
@@ -723,6 +734,7 @@ button#weathTimeBtn {
   font-size: 16px;
   background: #FFF;
   border: solid 3px #555;
+  /* border: solid 3px #fff; */
   box-sizing: border-box;
   border-radius: 10px;
 }
@@ -786,4 +798,68 @@ button#weathTimeBtn {
 .balloon1 p {
 	margin: 0;
 	padding: 0;
+}
+
+.red {
+    color: #a00
+}
+
+.mic_btn_blue{
+    display: inline-block;
+ 	width: 67px;
+	height: 67px;
+	background: #38a2c0;
+    background-image: url("/RECORD_layer/mic.png");
+    background-repeat:no-repeat;
+    background-position: 50% 50%;
+    /* background-attachment:fixed; */
+	border: none;
+	border-radius: 67px;
+	-moz-border-radius: 67px;
+    -webkit-border-radius: 67px;
+	color: #ffffff;
+    outline: none;
+	transition: background-color,color 0.3s ease-in;   
+}
+
+.mic_btn_red{
+    display: inline-block;
+ 	width: 67px;
+	height: 67px;
+	background: #a00;
+    background-image: url("/RECORD_layer/mic.png");
+    background-repeat:no-repeat;
+    background-position: 50% 50%;
+    /* background-attachment:fixed; */
+	border: none;
+	border-radius: 67px;
+	-moz-border-radius: 67px;
+    -webkit-border-radius: 67px;
+	color: #ffffff;
+    outline: none;
+	transition: background-color,color 0.3s ease-in;   
+}
+
+.OK_blue{
+    position: relative;
+    display: inline-block;
+ 	width: 67px;
+    height: 67px;
+    background: #38a2c0;
+    /* background-attachment:fixed; */
+	border: none;
+	border-radius: 67px;
+	-moz-border-radius: 67px;
+    -webkit-border-radius: 67px;
+	color: #ffffff;
+    outline: none;
+	transition: background-color,color 0.3s ease-in;   
+}
+
+.text_center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
 }

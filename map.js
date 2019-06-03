@@ -1,6 +1,5 @@
 var map;
 var mapView;
-var users;
 const zoomVal = 14;
 const mapCenterCoord = [140.034635, 35.648209]; //幕張メッセ イベントホール
 
@@ -23,8 +22,9 @@ var hazerdMapLayer;
 var freeDraw = null;
 
 var users = {};
+var layers = {};
 
-const buttonBlue = "#38a2c0";
+const buttonBlue = "#38a2c0";//rgb(56, 162, 192)
 const buttonRed = "#c03838";
 const buttonGray = "#bebebe";
 
@@ -38,6 +38,11 @@ var drawLineWidth = 7;
 var eraseMode = false;
 
 refreshSecond = 600;        //ナウキャスト、天気図、台風を更新する間隔（秒）
+
+var supportTouch = 'ontouchstart' in window;
+var TOUCH_STRAT_EVENT = supportTouch ? 'touchstart' : 'mousedown';
+var TOUCH_MOVE_EVENT = supportTouch ? 'touchmove' : 'mousemove';
+var TOUCH_END_EVENT = supportTouch ? 'touchend' : 'mouseup';
 
 // サーバにログを送信する
 function LOG(msg) {
@@ -109,6 +114,7 @@ function showMap() {
         source: new ol.source.OSM(),
         opacity: 1,
         visible: true,
+        //preload: Infinity,
     });
 
     // アイコンレイヤー
@@ -392,6 +398,17 @@ function showMap() {
             undo_func();
             undo_func = null;
         }
+
+        Object.keys(layers).forEach(function (layer) {
+            try {
+                if (layers[layer].__$map_on_click__) {
+                    layers[layer].__$map_on_click__(e);
+                    undo_func = layers[layer].__$end_click__;
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        })
 
         let iconClick = false;
         map.forEachFeatureAtPixel(e.pixel, function (feature, layer) {
@@ -790,6 +807,20 @@ function sendPositionRepeatedly() {
     }
 }
 
+
+function beacon() {
+    var features = getIconMapLayer().getSource().getFeatures();
+    features.forEach(function (f) {
+        var userId = f.__$id__;
+        if (userId == myUid) {
+            flash(f, 'red');
+        } else {
+            flash(f, 'blue');
+        }
+    })
+}
+setInterval(beacon, 2500);
+
 function getIconMapLayer() {
     //return (map.getLayers().getArray())[1];
     return iconLayer;
@@ -802,21 +833,21 @@ function changeMapIconPosition(userId, lng, lat, name) {
         const iconPoint = (new ol.geom.Point([lng, lat])).transform('EPSG:4326', 'EPSG:3857');
         feature.set("geometry", iconPoint);
         feature.set("id", name);
-        //--------------------------------------------------------------
-        // by Nori 2018.11.20
-        if (feature.__$clear_id__) {
-            clearInterval(feature.__$clear_id__);
-        }
-        if (userId == myUid) {
-            feature.__$clear_id__ = setInterval(function () {
-                flash(feature, 'red');
-            }, 2500);
-        } else {
-            feature.__$clear_id__ = setInterval(function () {
-                flash(feature, 'blue');
-            }, 2500);
-        }
-        //--------------------------------------------------------------
+        // //--------------------------------------------------------------
+        // // by Nori 2018.11.20
+        // if (feature.__$clear_id__) {
+        //     clearInterval(feature.__$clear_id__);
+        // }
+        // if (userId == myUid) {
+        //     feature.__$clear_id__ = setInterval(function () {
+        //         flash(feature, 'red');
+        //     }, 2500);
+        // } else {
+        //     feature.__$clear_id__ = setInterval(function () {
+        //         flash(feature, 'blue');
+        //     }, 2500);
+        // }
+        // //--------------------------------------------------------------
 
     }
 }
@@ -827,12 +858,12 @@ function deleteMapIcon(userId) {
     const feature = source.getFeatures().find(f => f.__$id__ == userId)
     if (feature) {
         source.removeFeature(feature);
-        //--------------------------------------------------------------
-        // by Nori 2018.11.20
-        if (feature.__$clear_id__) {
-            clearInterval(feature.__$clear_id__);
-        }
-        //--------------------------------------------------------------
+        // //--------------------------------------------------------------
+        // // by Nori 2018.11.20
+        // if (feature.__$clear_id__) {
+        //     clearInterval(feature.__$clear_id__);
+        // }
+        // //--------------------------------------------------------------
     }
 }
 
@@ -850,18 +881,18 @@ function addMapIcon(userId, lng, lat, name) {
         location: getLocation(userId),
     });
     newFeature.__$id__ = userId;
-    //--------------------------------------------------------------
-    // by Nori 2018.11.20
-    if (userId == myUid) {
-        newFeature.__$clear_id__ = setInterval(function () {
-            flash(newFeature, 'red');
-        }, 2500);
-    } else {
-        newFeature.__$clear_id__ = setInterval(function () {
-            flash(newFeature, 'blue');
-        }, 2500);
-    }
-    //--------------------------------------------------------------
+    // //--------------------------------------------------------------
+    // // by Nori 2018.11.20
+    // if (userId == myUid) {
+    //     newFeature.__$clear_id__ = setInterval(function () {
+    //         flash(newFeature, 'red');
+    //     }, 2500);
+    // } else {
+    //     newFeature.__$clear_id__ = setInterval(function () {
+    //         flash(newFeature, 'blue');
+    //     }, 2500);
+    // }
+    // //--------------------------------------------------------------
 
     source.addFeature(newFeature);
 }
@@ -1627,17 +1658,6 @@ function refreshNowcastLayer(diffHour) {
     }
     source.updateParams(params);
 }
-
-var memo_flag = false;
-$("#memoBtn").on("click", function () {
-    if (memo_flag) {
-        memo_flag = false;
-        $("#map").css({ "cursor": "auto" });
-    } else {
-        memo_flag = true;
-        $("#map").css({ "cursor": "cell" });
-    }
-});
 
 $("#patBtn").on("click", function () {
     sidebox_show(JISYOU_LAYER.menu_html);
