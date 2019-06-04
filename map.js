@@ -44,6 +44,7 @@ var TOUCH_STRAT_EVENT = supportTouch ? 'touchstart' : 'mousedown';
 var TOUCH_MOVE_EVENT = supportTouch ? 'touchmove' : 'mousemove';
 var TOUCH_END_EVENT = supportTouch ? 'touchend' : 'mouseup';
 
+
 // サーバにログを送信する
 function LOG(msg) {
     var log_msg = {

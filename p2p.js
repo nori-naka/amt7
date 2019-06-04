@@ -7,6 +7,7 @@ window.RTCSessionDescription = window.RTCSessionDescription || window.webkitRTCS
 window.RTCIceCandidate = window.RTCIceCandidate || window.webkitRTCIceCandidate || window.mozRTCIceCandidate;
 
 var isIOS = /iP(hone|(o|a)d)/.test(navigator.userAgent)
+var isWindows = /(w|W)indows/.test(navigator.userAgent)
 
 var localStream = null;
 var localVideoElm = document.getElementById("local_video");
@@ -461,7 +462,7 @@ var user_constraints = {
         // height: 480,
         frameRate: { min: 1, max: 10 },
     },
-    audio: true
+    audio: false
 };
 
 var hide_constraints = {
@@ -471,7 +472,7 @@ var hide_constraints = {
         // height: 480,
         frameRate: { min: 1, max: 10 },
     },
-    audio: true
+    audio: false
 };
 
 var local_recorder = null;

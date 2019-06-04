@@ -43,6 +43,7 @@ RECORD_layer.add = function () {
         // RECORD_layer.log("position.json addOverlayer");
 
         init_memo_pop_elm();
+        init_s2t();
 
         // layerに自信を登録する。
         layers.RECORD_layer = RECORD_layer;
@@ -111,6 +112,17 @@ RECORD_layer.memo_pop_elm.innerHTML = `<div class="text">
     </div>
 </div>`
 
+// RECORD_layer.memo_pop_elm.innerHTML = `<div class="text">
+//     <div>
+//         <p>MEMO</p>
+//         <textarea id="memo" class="text" rows="5" cols="20"></textarea>
+//         <div>
+//             <div id="memo_ok_btn" class="OK_blue">
+//                 <div class="text_center">OK</div>
+//             </div>
+//         </div>
+//     </div>
+// </div>`
 
 RECORD_layer.memo_pop_elm.style.marginTop = "0";
 RECORD_layer.memo_pop_elm.style.marginBottom = "1em";
@@ -131,7 +143,7 @@ var init_memo_pop_elm = function () {
     RECORD_layer.speech_btn = document.getElementById("speech_btn");
 
     RECORD_layer.memo_ok_btn.addEventListener("click", RECORD_layer.memo_ok);
-    speech2text(RECORD_layer.speech_btn, RECORD_layer.memo);
+    // speech2text(RECORD_layer.speech_btn, RECORD_layer.memo);
 }
 
 var memo_pos = null;
