@@ -28,6 +28,8 @@ RECORD_layer.log = function (text) {
 // remove()      :その機能レイヤ自体をmapオブジェクトから削除する
 //
 
+var isSupport = null;
+
 RECORD_layer.icon_features = [];
 RECORD_layer.add = function () {
     if (map) {
@@ -43,7 +45,6 @@ RECORD_layer.add = function () {
         // RECORD_layer.log("position.json addOverlayer");
 
         init_memo_pop_elm();
-        init_s2t();
 
         // layerに自信を登録する。
         layers.RECORD_layer = RECORD_layer;
@@ -91,6 +92,9 @@ $("#memoBtn").on("click", function () {
         $("#map").css({ "cursor": "auto" });
         $(this).css({ "background-color": buttonBlue });
 
+        RECORD_layer.memo_pop.setPosition(undefined);
+        RECORD_layer.memo_textarea.value = "";
+
     } else {
         RECORD_layer.memo_flag = true;
         $("#map").css({ "cursor": "cell" });
@@ -98,31 +102,18 @@ $("#memoBtn").on("click", function () {
     }
 });
 
-RECORD_layer.memo_pop_elm = document.createElement('div');
-RECORD_layer.memo_pop_elm.innerHTML = `<div class="text">
-    <div>
-        <p>MEMO</p>
-        <textarea id="memo" class="text" rows="5" cols="20"></textarea>
-        <div>
-            <div id="speech_btn" class="mic_btn_blue"></div>
-            <div id="memo_ok_btn" class="OK_blue">
-                <div class="text_center">OK</div>
-            </div>
-        </div>
-    </div>
-</div>`
+RECORD_layer.memo_pop_elm = document.getElementById("memo_pop");
+RECORD_layer.memo_textarea = document.getElementById("memo_textarea");
+RECORD_layer.btn_box = document.getElementById("btn_box");
+RECORD_layer.memo_ok_btn = document.getElementById("memo_ok_btn");
+RECORD_layer.memo_ok_btn.addEventListener("click", RECORD_layer.memo_ok);
 
-// RECORD_layer.memo_pop_elm.innerHTML = `<div class="text">
-//     <div>
-//         <p>MEMO</p>
-//         <textarea id="memo" class="text" rows="5" cols="20"></textarea>
-//         <div>
-//             <div id="memo_ok_btn" class="OK_blue">
-//                 <div class="text_center">OK</div>
-//             </div>
-//         </div>
-//     </div>
-// </div>`
+RECORD_layer.speech_btn = document.createElement("div");
+RECORD_layer.speech_btn.classList.add("mic_btn_blue");
+var isSupport = init_s2t(RECORD_layer.speech_btn, RECORD_layer.memo_textarea);
+if (isSupport) {
+    RECORD_layer.btn_box.appendChild(RECORD_layer.speech_btn);
+}
 
 RECORD_layer.memo_pop_elm.style.marginTop = "0";
 RECORD_layer.memo_pop_elm.style.marginBottom = "1em";
@@ -143,7 +134,7 @@ var init_memo_pop_elm = function () {
     RECORD_layer.speech_btn = document.getElementById("speech_btn");
 
     RECORD_layer.memo_ok_btn.addEventListener("click", RECORD_layer.memo_ok);
-    // speech2text(RECORD_layer.speech_btn, RECORD_layer.memo);
+
 }
 
 var memo_pos = null;
@@ -156,23 +147,23 @@ RECORD_layer.__$map_on_click__ = function (e) {
 
 RECORD_layer.__$end_click__ = function () {
     RECORD_layer.memo_pop.setPosition(undefined);
+    RECORD_layer.memo_textarea.value = "";
     memo_pos = null;
 }
 
 RECORD_layer.memo_ok = function () {
     if (RECORD_layer.memo_flag && memo_pos) {
-        var memo_elm = document.getElementById("memo");
         socketio.emit("file", JSON.stringify({
             user_name: users[myUid].name,
             lat: memo_pos[1],
             lng: memo_pos[0],
             date: new Date().toLocaleString(),
-            memo: memo_elm.value
+            memo: RECORD_layer.memo_textarea.value
         }));
         memo_pos = null;
     }
     RECORD_layer.memo_pop.setPosition(undefined);
-    RECORD_layer.memo.value = "";
+    RECORD_layer.memo_textarea.value = "";
 }
 
 //-------------------------------------------------------------

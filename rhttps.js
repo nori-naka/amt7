@@ -78,6 +78,7 @@ var io = require("socket.io").listen(server);
 
 // ユーザ管理ハッシュ
 var userHash = {};
+var user_list = {};
 var user_sid = {};
 //-------------------------------------------------------------
 // userHash = {
@@ -141,11 +142,11 @@ io.on("connection", function (socket) {
     // P2P開始
     socket.on("start", function (msg) {
         var data = JSON.parse(msg);
-        // console.log(`ON START: ${data.src} -> ${data.dest}  MSG=${msg}`);
+        console.log(`ON START: ${data.src} -> ${data.dest}  MSG=${msg}`);
         if (data.dest) {
-            socket.to(user_sid[data.dest]).emit("start", JSON.stringify({ id: data.src }));
+            socket.to(user_sid[data.dest]).emit("start", msg);
         } else {
-            socket.broadcast.emit("start", JSON.stringify({ id: data.src }));
+            socket.broadcast.emit("start", msg);
         }
     });
 
@@ -225,7 +226,7 @@ io.on("connection", function (socket) {
     // 位置情報着信
     socket.on("renew", function (msg) {
         var data = JSON.parse(msg);
-        // console.log(`ON RENEW : From=${data.id} LAT=${data.lat} LNG=${data.lng} CAM=${data.cam} NAME=${data.name}`);
+        console.log(`ON RENEW : From=${data.id} LAT=${data.lat} LNG=${data.lng} CAM=${data.cam} NAME=${data.name}`);
 
         if (data.id) {
             userHash[data.id] = { lat: data.lat, lng: data.lng, ttl: ttlVal, cam: data.cam, name: data.name };
@@ -292,32 +293,52 @@ io.on("connection", function (socket) {
         allDraw = allDraw.filter(data => data.id != id);
     })
 
-    setInterval(function () {
-        socket.emit("renew", JSON.stringify(userHash));
-        // console.log(`SEND RENEW : USERHASH=${JSON.stringify(userHash)}`);
-        //console.log(`SEND RENEW : USER_SID=${JSON.stringify(user_sid)}`);
-        //console.log("TIME: " + (new Date()).getTime());
 
-        //----------------------------------------------------------
-        // Keep Alive (CHECK TTL)
-        //----------------------------------------------------------
-        const now = (new Date()).getTime();
-        if (now >= keepAliveTime + 1500) {
-            keepAliveTime = now;
-            Object.keys(userHash).forEach(function (id) {
-                userHash[id].ttl = userHash[id].ttl - 1;
-                if (userHash[id].ttl < 0) {
-                    delete userHash[id];
-                    //delete user_sid[id];
-                    console.log(`DELETE id=${id} USER_HASH=${JSON.stringify(userHash)}`);
-                }
-            });
+    // ユーザリスト
+    socket.on("user_list", function (msg) {
+        console.log(`recive user_list=${msg}`)
+        var data = JSON.parse(msg);
+
+        if (data.id) {
+            user_list[data.id] = { ttl: ttlVal, name: data.name };
         }
-        //console.log("USERHASH=" + JSON.stringify(userHash));
-        //console.log("USER_SID=" + JSON.stringify(user_sid));
+    });
+
+    setInterval(function () {
+        console.log(`USER_LIST=${JSON.stringify(user_list)}`);
+        io.emit("user_list", JSON.stringify(user_list));
+    }, 5000);
+
+    setInterval(function () {
+        io.emit("renew", JSON.stringify(userHash));
     }, 1500);
+
 });
 
+setInterval(function () {
+    Object.keys(user_list).forEach(function (id) {
+        user_list[id].ttl = user_list[id].ttl - 1;
+        if (user_list[id].ttl < 0) {
+            delete user_list[id];
+            console.log(`DELETE id=${id} USER_LIST=${JSON.stringify(user_list)}`);
+        }
+    });
+}, 5000);
+
+setInterval(function () {
+    const now = (new Date()).getTime();
+    if (now >= keepAliveTime + 1500) {
+        keepAliveTime = now;
+        Object.keys(userHash).forEach(function (id) {
+            userHash[id].ttl = userHash[id].ttl - 1;
+            if (userHash[id].ttl < 0) {
+                delete userHash[id];
+                //delete user_sid[id];
+                console.log(`DELETE id=${id} USER_HASH=${JSON.stringify(userHash)}`);
+            }
+        });
+    }
+}, 1500);
 
 
 

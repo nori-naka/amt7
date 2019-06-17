@@ -3,8 +3,6 @@ var mapView;
 const zoomVal = 14;
 const mapCenterCoord = [140.034635, 35.648209]; //幕張メッセ イベントホール
 
-var commuDialogTimerId = null;
-
 var myCamera = false;
 
 var nowcastLayer;
@@ -45,14 +43,14 @@ var TOUCH_MOVE_EVENT = supportTouch ? 'touchmove' : 'mousemove';
 var TOUCH_END_EVENT = supportTouch ? 'touchend' : 'mouseup';
 
 
-// サーバにログを送信する
-function LOG(msg) {
-    var log_msg = {
-        id: user_name ? user_name : myUid,
-        text: msg
-    }
-    socketio.emit("log", JSON.stringify(log_msg));
-}
+// // サーバにログを送信する
+// function LOG(msg) {
+//     var log_msg = {
+//         id: user_name ? user_name : myUid,
+//         text: msg
+//     }
+//     socketio.emit("log", JSON.stringify(log_msg));
+// }
 
 var user_name = null;
 
@@ -65,7 +63,8 @@ var input_name = function () {
     var input_name_change = function () {
         if ($name.value != "") {
             user_name = $name.value;
-            document.getElementById("myVideoTitle").innerText = user_name;
+            // document.getElementById("myVideoTitle").innerText = user_name;
+            document.getElementById("myUid").innerText = user_name;
         } else {
             user_name = myUid;
         }
@@ -400,6 +399,8 @@ function showMap() {
             undo_func = null;
         }
 
+        LOG(`now click position = ${ol.proj.transform([e.coordinate[0], e.coordinate[1]], "EPSG:3857", "EPSG:4326")}`);
+
         Object.keys(layers).forEach(function (layer) {
             try {
                 if (layers[layer].__$map_on_click__) {
@@ -411,79 +412,13 @@ function showMap() {
             }
         })
 
-        let iconClick = false;
         map.forEachFeatureAtPixel(e.pixel, function (feature, layer) {
-            if (feature.get("name") == "icon" && feature.get("id") != myUid) {
 
-                iconClick = true;
-                let x = e.pixel[0] - 60;
-                let y = e.pixel[1] - 160;
-                if (y < 0) {
-                    y += 190;
-                    $("#commuDialogBody").removeClass("commuDialogBody1").removeClass("commuDialogBody2").addClass("commuDialogBody2");
-                } else {
-                    $("#commuDialogBody").removeClass("commuDialogBody1").removeClass("commuDialogBody2").addClass("commuDialogBody1");
-                }
-                if (y + 120 >= screen.width) {
-                    y = screen.width - 120;
-                }
-                $("#commuName>span").text(feature.get("id"));
-                $("#commuDialog").show().offset({ left: x, top: y });
-
-                let dest = feature.get("id");
-                if (!users[dest] || !users[dest].cam) {
-                    $("div#commuNg").show();
-                    $("button#commuStart").prop("disabled", true);
-                    $("button#commuEnd").prop("disabled", true);
-
-
-                } else if (remote_peers[dest] && remote_peers[dest].myActive) {
-                    $("div#commuNg").hide();
-                    $("button#commuStart").prop("disabled", true);
-                    $("button#commuEnd").prop("disabled", false);
-                } else {
-                    $("div#commuNg").hide();
-                    $("button#commuStart").prop("disabled", false);
-                    $("button#commuEnd").prop("disabled", true);
-                }
-
-                const $commuStart = $("#commuStart");
-                $commuStart.off();
-                $commuStart.on("click", function () {
-                    const dest = feature.get("id");
-                    watchStart(dest);
-
-                    clearTimeout(commuDialogTimerId);
-                    commuDialogTimerId = null;
-                    $("#commuDialog").hide();
-                });
-
-                const $commuEnd = $("#commuEnd");
-                $commuEnd.off();
-                $commuEnd.on("click", function () {
-                    const dest = feature.get("id");
-                    watchEnd(dest);
-
-                    clearTimeout(commuDialogTimerId);
-                    commuDialogTimerId = null;
-                    $("#commuDialog").hide();
-                });
-
-                commuDialogTimerId = setTimeout(function () {
-                    commuDialogTimerId = null;
-                    $("#commuDialog").hide();
-                }, 5000);
-            }
-            else if (feature.__$do_func__ != null) {
+            if (feature.__$do_func__ != null) {
                 feature.__$do_func__(e);
                 undo_func = feature.__$undo_func__;
             }
         });
-        if (iconClick != true && commuDialogTimerId != null) {
-            clearTimeout(commuDialogTimerId);
-            commuDialogTimerId = null;
-            $("#commuDialog").hide();
-        }
     });
 
     let drawX;
@@ -834,22 +769,6 @@ function changeMapIconPosition(userId, lng, lat, name) {
         const iconPoint = (new ol.geom.Point([lng, lat])).transform('EPSG:4326', 'EPSG:3857');
         feature.set("geometry", iconPoint);
         feature.set("id", name);
-        // //--------------------------------------------------------------
-        // // by Nori 2018.11.20
-        // if (feature.__$clear_id__) {
-        //     clearInterval(feature.__$clear_id__);
-        // }
-        // if (userId == myUid) {
-        //     feature.__$clear_id__ = setInterval(function () {
-        //         flash(feature, 'red');
-        //     }, 2500);
-        // } else {
-        //     feature.__$clear_id__ = setInterval(function () {
-        //         flash(feature, 'blue');
-        //     }, 2500);
-        // }
-        // //--------------------------------------------------------------
-
     }
 }
 
@@ -859,12 +778,6 @@ function deleteMapIcon(userId) {
     const feature = source.getFeatures().find(f => f.__$id__ == userId)
     if (feature) {
         source.removeFeature(feature);
-        // //--------------------------------------------------------------
-        // // by Nori 2018.11.20
-        // if (feature.__$clear_id__) {
-        //     clearInterval(feature.__$clear_id__);
-        // }
-        // //--------------------------------------------------------------
     }
 }
 
@@ -882,19 +795,6 @@ function addMapIcon(userId, lng, lat, name) {
         location: getLocation(userId),
     });
     newFeature.__$id__ = userId;
-    // //--------------------------------------------------------------
-    // // by Nori 2018.11.20
-    // if (userId == myUid) {
-    //     newFeature.__$clear_id__ = setInterval(function () {
-    //         flash(newFeature, 'red');
-    //     }, 2500);
-    // } else {
-    //     newFeature.__$clear_id__ = setInterval(function () {
-    //         flash(newFeature, 'blue');
-    //     }, 2500);
-    // }
-    // //--------------------------------------------------------------
-
     source.addFeature(newFeature);
 }
 
@@ -913,9 +813,9 @@ function onReceiveRenew(msg) {
             const serverName = serverData[userId].name;
 
             // menu title
-            if (myUid != userId && serverName != document.getElementById(`menu_${userId}`).innerText) {
-                changeMenu_name(userId, serverName);
-            }
+            // if (myUid != userId && serverName != document.getElementById(`menu_${userId}`).innerText) {
+            //     changeMenu_name(userId, serverName);
+            // }
 
             // icon
             if (users[userId].lng == null) {
@@ -938,15 +838,15 @@ function onReceiveRenew(msg) {
             }
             delete serverData[userId];  //処理済
         } else {
-            deleteUser(userId);
+            // deleteUser(userId);
             deleteMapIcon(userId);
         }
     });
 
     Object.keys(serverData).forEach(function (userId) {
-        if (userId != myUid) {
-            addMenu(userId);
-        }
+        // if (userId != myUid) {
+        //     addMenu(userId);
+        // }
         addMapIcon(userId, serverData[userId].lng, serverData[userId].lat, serverData[userId].name);
     });
 
@@ -985,36 +885,19 @@ var disp_init = function () {
     fliper(localVideoElm);
 }
 
-var login = function () {
-    if (init_user_id == "initial_user_id") {
-        return getUniqueStr();
-    } else {
-        return init_user_id;
-    }
+// var login = function () {
+//     if (init_user_id == "initial_user_id") {
+//         return getUniqueStr();
+//     } else {
+//         return init_user_id;
+//     }
+// }
 
-    // let autoId;
-    // if (localStorage.id) {
-    //     autoId = localStorage.id;
-    // } else {
-    //     autoId = getUniqueStr();
-    // }
-    // const dialog_result = prompt("名前", autoId);
-    // if (!dialog_result) {
-    //     localStorage.clear();
-    //     alert("クリアしました");
-    //     dialog_result = login();
-    // } else if (localStorage.id != dialog_result) {
-    //     localStorage.id = dialog_result;
-    // }
-    // //console.log(dialog_result + "でログインしました");
-    // return dialog_result;
-}
-
-var getUniqueStr = function (myStrong) {
-    var strong = 10;
-    if (myStrong) strong = myStrong;
-    return new Date().getTime().toString(16) + Math.floor(strong * Math.random()).toString(16)
-}
+// var getUniqueStr = function (myStrong) {
+//     var strong = 10;
+//     if (myStrong) strong = myStrong;
+//     return new Date().getTime().toString(16) + Math.floor(strong * Math.random()).toString(16)
+// }
 
 // 天気図・台風アイコン取得
 

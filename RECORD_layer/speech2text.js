@@ -1,36 +1,97 @@
-var init_s2t = function () {
-    var SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
+var init_s2t = function (btn_elm, result_elm) {
+
+    if (!btn_elm) {
+        LOG(`init_s2t: btn_elm is null`);
+        return null;
+    }
+
+    if (!result_elm) {
+        LOG(`init_s2t: result_elm is null`);
+        return null;
+    }
+
+    try {
+        var SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
+    } catch (e) {
+        return null;
+    }
+
     var recognition = new SpeechRecognition();
+
+    recognition.lang = 'ja-JP';
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.onresult = function (event) {
+
+
+    // recognition.onresult = function (event) {
+    //     console.log(event);
+    //     result_elm.value = event.results[0][0].transcript;
+    //     recognition.stop();
+    // }
+
+    recognition.onresult = (event) => {
+
+        var finalTranscript = ''
+
         console.log(event);
-        elmView.value = event.results[0][0].transcript;
-        recognition.stop();
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            let transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript;
+            } else {
+                interimTranscript = transcript;
+            }
+        }
+        result_elm.value = finalTranscript + interimTranscript;
     }
 
-    recognition.onspeechend = function () {
-        recognition.stop();
+
+    var mic_on = false;
+
+    var mic_end = function () {
+        if (btn_elm.classList.contains("mic_btn_red")) {
+            btn_elm.classList.remove("mic_btn_red");
+            btn_elm.classList.add("mic_btn_blue");
+        }
+        mic_on = false;
     }
+    var mic_start = function () {
+        if (btn_elm.classList.contains("mic_btn_blue")) {
+            btn_elm.classList.remove("mic_btn_blue");
+            btn_elm.classList.add("mic_btn_red");
+        }
+        mic_on = true;
+    }
+
+    // recognition.onspeechend = function () {
+    //     recognition.stop();
+    //     mic_end();
+    // }
 
     recognition.onnomatch = function (event) {
-        elmView.value = '認識できませんでした。。。';
+        result_elm.value = '認識できませんでした。。。';
+        mic_end();
     }
 
     recognition.onerror = function (event) {
-        elmView.value = '例外が発生しました: ' + event.error;
+        result_elm.value = '例外が発生しました: ' + event.error;
+        mic_end();
     }
 
-    // var elmView = document.querySelector('#RecognitionView');
-    var elmView = document.querySelector('#memo');
+    btn_elm.addEventListener('click', function (e) {
 
-    // document.querySelector('#RecognitionButton').addEventListener('click', function (e) {
-    //     recognition.start();
-    // });
-    RECORD_layer.speech_btn.addEventListener('click', function (e) {
-        recognition.start();
+        if (mic_on) {
+            recognition.stop();
+            mic_end();
+        } else {
+            recognition.start();
+            mic_start();
+        }
+
     });
 
+    return 1;
 }
 
 
