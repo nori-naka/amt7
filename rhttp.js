@@ -13,8 +13,14 @@ var url = require("url");
 var mime = {
     ".html": "text/html",
     ".css": "text/css",
-    ".js": "text/javascript"
+    ".js": "text/javascript",
+    ".webm": "video/webm"
 };
+
+
+var json_filename = "./RECORD_layer/position.json";
+var out_str = fs.readFileSync(json_filename, 'utf8')
+var position_hash = JSON.parse(out_str)
 
 var options = {
     key: fs.readFileSync(SSL_KEY).toString(),
@@ -26,19 +32,30 @@ const getUniqueId = getUniqueIdMaker();
 var allDraw = [];
 
 // サーバの初期化
-// var server = require("https").createServer(options, function (req, res) {
+//var server = require("https").createServer(options, function (req, res) {
 var server = require("http").createServer(function (req, res) {
-    var urlParse = url.parse(req.url, true);
+        var urlParse = url.parse(req.url, true);
+
+    // User-Agent : WebView detected
+    var ua_str = JSON.stringify(req.headers['user-agent'])
+    // console.log("ua is " + ua_str);
+    var re = /.+\swv\).+/
+    var is_webview = ua_str.match(re);
+
 
     var filePath;
-    if (urlParse.pathname == '/') {
-        filePath = '/index.html';
+    if (urlParse.pathname == '/' || urlParse.pathname == '/index.html') {
+        if (is_webview) {
+            filePath = '/index_wv.html';
+        } else {
+            filePath = '/index.html';
+        }
     } else {
-        filePath = urlParse.pathname;
+        filePath = decodeURI(urlParse.pathname);
     }
-    //console.log("req.url=" + req.url);
-    //console.log("filePath=" + filePath);
-    //console.log(JSON.stringify(urlParse));
+    // console.log("req.url=" + req.url);
+    // console.log("filePath=" + filePath);
+    // console.log(JSON.stringify(urlParse));
 
     var fullPath = __dirname + filePath;
     fs.readFile(fullPath, function (err, data) {
@@ -62,16 +79,24 @@ var io = require("socket.io").listen(server);
 
 // ユーザ管理ハッシュ
 var userHash = {};
+var user_list = {};
 var user_sid = {};
 //-------------------------------------------------------------
 // userHash = {
-//   id : { lat : lat,  lng : lng, ttl : ttl}
+//   id : { lat : lat,  lng : lng, ttl : ttl, name: name},
+//   id : { lat : lat,  lng : lng, ttl : ttl, name: name},
 // }
 //-------------------------------------------------------------
 // user_sid = {
 //   id : socket_id,
 // }
 //-------------------------------------------------------------
+
+var getUniqueStr = function (myStrong) {
+    var strong = 10;
+    if (myStrong) strong = myStrong;
+    return new Date().getTime().toString(16) + Math.floor(strong * Math.random()).toString(16)
+}
 
 // イベントの定義
 io.on("connection", function (socket) {
@@ -118,13 +143,74 @@ io.on("connection", function (socket) {
     // P2P開始
     socket.on("start", function (msg) {
         var data = JSON.parse(msg);
-        // console.log(`ON START: ${data.src} -> ${data.dest}  MSG=${msg}`);
+        console.log(`ON START: ${data.src} -> ${data.dest}  MSG=${msg}`);
         if (data.dest) {
-            socket.to(user_sid[data.dest]).emit("start", JSON.stringify({ id: data.src }));
+            socket.to(user_sid[data.dest]).emit("start", msg);
         } else {
-            socket.broadcast.emit("start", JSON.stringify({ id: data.src }));
+            socket.broadcast.emit("start", msg);
         }
     });
+
+
+    // position_hash = 
+    // {
+    //    XXXX: { "user_name": "xxx", "経度情報": "XXX", "緯度情報": "YYY", "年月日": "YYYY/MM/DD", "video": "/movie/file_name.webm" },
+    //    XXXY: { "user_name": "xxx", "経度情報": "XXX", "緯度情報": "YYY", "年月日": "YYYY/MM/DD", "video": "/movie/file_name.webm" },
+    // }
+
+    // クライアントから送信されるデータ（画像データ含む）
+    // {
+    //     user_name: XXXXX,
+    //     name: `${local_id}_${Date.now()}.webm`,  (video only)
+    //     lat: position.lat,
+    //     lng: position.lng,
+    //     date: new Date().toLocaleString(),
+    //     blob: b64, (video only)
+    //     memo: XXX,  (memo only)
+    //     delete: xxxx (delete only. xxxx is id)
+    // }
+
+    socket.on("file", function (msg) {
+
+        console.log(`FILE on ${msg}`);
+        var data = JSON.parse(msg);
+
+        if (data.delete) {
+            delete position_hash[data.delete];
+
+        } else if (data.blob) {
+            console.log(`FILE=${data.name}`)
+            // console.log(data.blob)
+
+            // video file save
+            var file_content = data.blob.replace(/^data:video\/webm;base64,/, "")
+            fs.writeFile(`${__dirname}/movie/${data.name}`, file_content, "base64", function (err) {
+                console.log(`socket.on_file: video_file write err=${err}`);
+            });
+
+            // position_hash file save
+            position_hash[getUniqueStr()] = {
+                "記録者": data.user_name,
+                "経度情報": data.lng,
+                "緯度情報": data.lat,
+                "年月日": data.date,
+                "video": "/movie/" + data.name
+            };
+        } else {
+            position_hash[getUniqueStr()] = {
+                "記録者": data.user_name,
+                "経度情報": data.lng,
+                "緯度情報": data.lat,
+                "年月日": data.date,
+                "memo": data.memo
+            };
+        }
+        fs.writeFile(json_filename, JSON.stringify(position_hash), function (err) {
+            console.log(`socket.on_file: position_hash write err=${err}`);
+        })
+
+    });
+
 
     // メッセージ送信
     socket.on("publish", function (msg) {
@@ -141,7 +227,7 @@ io.on("connection", function (socket) {
     // 位置情報着信
     socket.on("renew", function (msg) {
         var data = JSON.parse(msg);
-        // console.log(`ON RENEW : From=${data.id} LAT=${data.lat} LNG=${data.lng} CAM=${data.cam} NAME=${data.name}`);
+        console.log(`ON RENEW : From=${data.id} LAT=${data.lat} LNG=${data.lng} CAM=${data.cam} NAME=${data.name}`);
 
         if (data.id) {
             userHash[data.id] = { lat: data.lat, lng: data.lng, ttl: ttlVal, cam: data.cam, name: data.name };
@@ -208,32 +294,52 @@ io.on("connection", function (socket) {
         allDraw = allDraw.filter(data => data.id != id);
     })
 
-    setInterval(function () {
-        socket.emit("renew", JSON.stringify(userHash));
-        // console.log(`SEND RENEW : USERHASH=${JSON.stringify(userHash)}`);
-        //console.log(`SEND RENEW : USER_SID=${JSON.stringify(user_sid)}`);
-        //console.log("TIME: " + (new Date()).getTime());
 
-        //----------------------------------------------------------
-        // Keep Alive (CHECK TTL)
-        //----------------------------------------------------------
-        const now = (new Date()).getTime();
-        if (now >= keepAliveTime + 1500) {
-            keepAliveTime = now;
-            Object.keys(userHash).forEach(function (id) {
-                userHash[id].ttl = userHash[id].ttl - 1;
-                if (userHash[id].ttl < 0) {
-                    delete userHash[id];
-                    //delete user_sid[id];
-                    console.log(`DELETE id=${id} USER_HASH=${JSON.stringify(userHash)}`);
-                }
-            });
+    // ユーザリスト
+    socket.on("user_list", function (msg) {
+        console.log(`recive user_list=${msg}`)
+        var data = JSON.parse(msg);
+
+        if (data.id) {
+            user_list[data.id] = { ttl: ttlVal, name: data.name };
         }
-        //console.log("USERHASH=" + JSON.stringify(userHash));
-        //console.log("USER_SID=" + JSON.stringify(user_sid));
+    });
+
+    setInterval(function () {
+        console.log(`USER_LIST=${JSON.stringify(user_list)}`);
+        io.emit("user_list", JSON.stringify(user_list));
+    }, 5000);
+
+    setInterval(function () {
+        io.emit("renew", JSON.stringify(userHash));
     }, 1500);
+
 });
 
+setInterval(function () {
+    Object.keys(user_list).forEach(function (id) {
+        user_list[id].ttl = user_list[id].ttl - 1;
+        if (user_list[id].ttl < 0) {
+            delete user_list[id];
+            console.log(`DELETE id=${id} USER_LIST=${JSON.stringify(user_list)}`);
+        }
+    });
+}, 5000);
+
+setInterval(function () {
+    const now = (new Date()).getTime();
+    if (now >= keepAliveTime + 1500) {
+        keepAliveTime = now;
+        Object.keys(userHash).forEach(function (id) {
+            userHash[id].ttl = userHash[id].ttl - 1;
+            if (userHash[id].ttl < 0) {
+                delete userHash[id];
+                //delete user_sid[id];
+                console.log(`DELETE id=${id} USER_HASH=${JSON.stringify(userHash)}`);
+            }
+        });
+    }
+}, 1500);
 
 
 
