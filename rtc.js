@@ -85,14 +85,14 @@ const createPeerConnection = function () {
             { urls: 'stun:stun.ekiga.net' },
             { urls: 'stun:stun.ideasip.com' },
             { urls: 'stun:stun.l.google.com:19302' },
-            { url: 'stun:stun1.l.google.com:19302' },
-            { url: 'stun:stun2.l.google.com:19302' },
-            { url: 'stun:stun3.l.google.com:19302' },
-            { url: 'stun:stun4.l.google.com:19302' },
-            { url: 'stun:stunserver.org' },
-            { url: 'stun:stun.softjoys.com' },
-            { url: 'stun:stun.voipbuster.com' },
-            { url: 'stun:stun.voxgratia.org' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun4.l.google.com:19302' },
+            { urls: 'stun:stunserver.org' },
+            { urls: 'stun:stun.softjoys.com' },
+            { urls: 'stun:stun.voipbuster.com' },
+            { urls: 'stun:stun.voxgratia.org' },
         ]
     });
 
@@ -165,72 +165,44 @@ const on_negotiationneeded = function (ev) {
 
 const on_track = function (ev) {
 
-    const remote_peer = this;
+    let target_id = null;
+    Object.keys(peers).forEach(function(id){
+        if (peers[id] ==  ev.target){
+            target_id = id;
+            return;
+        }
+    });
 
-    if (ev.streams[0]) {
-
-        // 発火元を調べる
-        let target_id = null;
-        Object.keys(peers).forEach(function (id) {
-            if (peers[id] === remote_peer) {
-                target_id = id;
-                return;
-            }
-        });
-
-        // // TEST
-        // ev.streams[0].onactive = function (ev) { alert(`ev.streams[0].onactive: ${ev}`) }
-        // ev.streams[0].oninactive = function (ev) { alert(`ev.streams[0].oninactive: ${ev}`) }
-        // ev.streams[0].onaddtrack = function (ev) { alert(`ev.streams[0].onaddtrack: ${ev}`) }
-        // ev.streams[0].onremovetrack = function (ev) { alert(`ev.streams[0].onremovetrack: ${ev}`) }
-        // ev.track.onend = function (ev) { alert(`ev.track.onend: ${ev}`) };
-        // ev.track.onmute = function (ev) { alert(`ev.track.onmute: ${ev}`) };
-        // ev.track.onunmute = function (ev) { alert(`ev.track.onunmute: ${ev}`) };
-
-        let media_elm = document.getElementById(`${ev.track.kind}_${target_id}`);
+    if (ev.track.kind == "video"){
+        let media_elm = document.getElementById(`video_${target_id}`);
         media_elm.srcObject = ev.streams[0];
+        media_elm.classList.remove("no_display");
+        media_elm.play();
 
-        setTimeout(function () {
-            if (ev.track.kind == "video") {
-                media_elm.play().then(function () {
-                    media_elm.classList.remove("no_display");
-                });
-            } else { // kind == "audio"
-                media_elm.play().then(function () {
-                    const $mic_btn = document.getElementById("call_audio_to_all");
-                    $mic_btn.classList.add("green_background");
-                })
-            }
-            LOG(`${ev.streams[0].getTracks()[0].kind}  on track : ${target_id} -> ${myUid}`);
+        ev.streams[0].onremovetrack = function(ev){
+            media_elm.classList.add("no_display");
+        }
 
-            ev.streams[0].onremovetrack = function (ev) {
-                if (ev.track.kind == "video") {
-                    media_elm.classList.add("no_display");
-                } else { // kind == "audio"
-                    $mic_btn.classList.remove("green_background");
-                }
-            }
-        }, 500);
+    } else {
+        let media_elm = document.getElementById(`audio_${target_id}`);
+        media_elm.srcObject = ev.streams[0];
+        media_elm.play();    
+
+        const $mic_btn = document.getElementById("call_audio_to_all");
+        $mic_btn.classList.add("green_background");
+    
+        ev.streams[0].onremovetrack = function(ev){
+            $mic_btn.classList.remove("green_background");
+        }
     }
 }
 
 // WHY! onremovetrack is not work!
 const on_removetrack = function (ev) {
-    // var stream = document.getElementById("your_video").srcObject;
-    // var trackList = stream.getTracks();
-
-    // if (trackList.length == 0) {
-    //     closeVideoCall(ev.target);
-    // }
+    // no operation
 }
 
 const on_removestream = function (ev) {
-    // var stream = document.getElementById("your_video").srcObject;
-    // var trackList = stream.getTracks();
-
-    // if (trackList.length == 0) {
-    //     closeVideoCall(ev.target);
-    // }
 
     const remote_peer = this;
 
