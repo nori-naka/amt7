@@ -31,6 +31,7 @@
 
 
 .box {
+    position: absolute;
     display: inline-block;
     background: #000;
     /* width: 320px; */
@@ -46,16 +47,20 @@
     display: none;
 }
 
-.inbox {
+.child_box {
     top: 0px;
     width: 100%;
     transition: all 1s ease;
+    /* z-index: 100; */
 }
 
-.you_box{
-    position: absolute;
+#you_box{
     top: 0px;
     right: 0px;
+}
+
+.title_box{
+    position: relative;
 }
 
 .title {
@@ -69,6 +74,20 @@
     min-height: 30px;
 }
 
+.rec_btn{
+    position: absolute;
+    color: #fff;
+    background: #f00;
+    text-align: center;
+    line-height: 2em;
+    top: 0px;
+    right: 0px;
+    width: 80px;
+    height: 100%;
+    cursor:pointer;
+    z-index: 150;
+}
+
 .blue_background {
     background: #38a2c0;
 }
@@ -80,13 +99,15 @@
 }
 
 .mic_btn {
+    position: relative;
+    margin: 0 0 0 10px;
     cursor: pointer;
     display: inline-block;
  	width: 67px;
 	height: 67px;
-    background-image: url("/img/mic.png");
-    background-repeat:no-repeat;
-    background-position: 50% 50%;
+    /* background-image: url("/img/mic.png"); */
+    /* background-repeat:no-repeat; */
+    /* background-position: 50% 50%; */
     /* background-attachment:fixed; */
 	border: none;
 	border-radius: 67px;

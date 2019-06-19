@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="css/ol.css" />
   <link rel="stylesheet" href="css/spectrum.css" />
   <link rel="stylesheet" type="text/css" href="css/style.css" />
+  <link rel="stylesheet" type="text/css" href="css/rtc.css" />
   <!--
 <link rel="stylesheet" href="css/JISYOU_LAYER.css" type="text/css">
 -->
@@ -18,15 +19,16 @@
 
 <body>
   <div id='map'></div>
-  <div id="localBox" class="video_width">
+
+  <div id="my_box" class="box box_width">
     <div class="title_box">
-      <div class="videoTitle" id="myVideoTitle">My ID</div>
+      <div id="myUid" class="text child_box title"></div>
       <div class="rec_btn" id="rec_btn">REC</div>
     </div>
-    <video id='local_video' autoplay loop muted playsinline></video>
+    <video id="my_video" class="child_box video_width" playsinline autoplay muted></video>
   </div>
-  <div id="remoteBox" class="video_width">
-    <div id="remote"></div>
+  <div id="you_box" class="box">
+    <div id="user_list" class="text box_width"></div>
   </div>
 
   <!--
@@ -51,16 +53,6 @@
         </div>
       </div>
     </div>
-  </div>
-
-  <div id="commuDialog">
-    <div id="commuDialogBody" class="commuDialogBody1">
-      <div id="commuName"><span></span></div>
-      <div id="commuNg" style="vertical-align: middle; text-align: center">カメラ無し</div>
-      <div><button id="commuStart">開始</button></div>
-      <div><button id="commuEnd">終了</button></div>
-    </div>
-    <div id="nameOverlaySpacer">　</div>
   </div>
 
   <div id="mainMenu" class="menuDiv">
@@ -181,11 +173,11 @@
       <img src="pic/dialog/select_yes.png" id="OnOffNowcast">
       <input type="range" min="0" max="100" value="100" class="slider2" id="sliderNowcast">
     </div>
-    <!-- <div class="layerDialogContent">
+    <div class="layerDialogContent">
       <span>洪水ハザードマップ</span>
       <img src="pic/dialog/select_yes.png" id="OnOffHazerdMap">
       <input type="range" min="0" max="100" value="100" class="slider2" id="sliderHazerdMap">
-    </div> -->
+    </div>
     <!-- <div class="layerDialogContent">
       <span>みちパト</span>
       <img src="pic/dialog/select_yes.png" id="OnOffPat">
@@ -197,12 +189,12 @@
   </div>
 
   <div id="sidebox" class="box28">
-    <p id="sidebox_x" class="box-title">✕</p>
+    <p id="sidebox_x" class="box-title">笨销</p>
     <p id="sidebox_in" class="openbox"></p>
   </div>
 
   <div id="centorbox" class="box29">
-    <p id="centorbox_x" class="box-title">✕</p>
+    <p id="centorbox_x" class="box-title">笨销</p>
     <p id="centorbox_in" class="openbox"></p>
   </div>
 
@@ -211,14 +203,58 @@
   <script src="js/ol.js"></script>
   <script src="js/spectrum.rev.js"></script>
   <script src="js/jquery.spectrum-ja.js"></script>
-  <script src="menu.js"></script>
+  <script>
+    var socketio = io.connect();
+    var myUid;
+    const LOG = function (msg) {
+      if (typeof msg == "string") {
+        var log_msg = {
+          id: myUid,
+          text: msg
+        }
+      } else {
+        var log_msg = {
+          id: myUid,
+          text: JSON.stringify(msg, null, "\t")
+        }
+      }
+      socketio.emit("log", JSON.stringify(log_msg));
+      console.log(msg);
+    }
+
+    const init_user_id = "initial_user_id";
+    const login = function () {
+      if (init_user_id == "initial_user_id") {
+        return getUniqueStr();
+      } else {
+        return init_user_id;
+      }
+    }
+
+    const getUniqueStr = function (myStrong) {
+      var strong = 10;
+      if (myStrong) strong = myStrong;
+      return new Date().getTime().toString(16) + Math.floor(strong * Math.random()).toString(16)
+    }
+
+    myUid = login();
+    document.getElementById("myUid").innerText = myUid;
+
+
+  </script>
+
+  <!-- <script src="menu.js"></script>
   <script src='p2p.js'></script>
-  <script src="flip.js"></script>
+  <script src="flip.js"></script> -->
   <script src="RECORD_layer/record.js"></script>
   <script src="map.js"></script>
+
+  <script src="user_list.js"></script>
+  <script src="rtc.js"></script>
+
   <script src="RECORD_layer/speech2text.js"></script>
   <script src="RECORD_layer/RECORD_layer.js"></script>
-  <script src="exif.js"></script>
+  <!-- <script src="exif.js"></script> -->
   <script src="beacon.js"></script>
 
   <!--
@@ -231,21 +267,21 @@
 -->
 
   <script>
-    init_user_id = "initial_user_id";
+    // init_user_id = "initial_user_id";
     window.onload = function () {
       // setVideoSize();
-      myUid = login();
-      p2pInit(myUid);
-      disp_init();
+      // myUid = login();
+      // p2pInit(myUid);
+      // disp_init();
       showMap();
       curPos(myUid);
       sendPositionRepeatedly();
-      colorBtnInit();
-      if (myUid == "ControlCenter") {
-        $("#telBtn").hide();
-      }
-      $("#myVideoTitle").html(myUid);
-      //JISYOU_LAYER.add();
+      // colorBtnInit();
+      // if (myUid == "ControlCenter") {
+      //   $("#telBtn").hide();
+      // }
+      // $("#myVideoTitle").html(myUid);
+      // //JISYOU_LAYER.add();
       RECORD_layer.add();
     }
   </script>

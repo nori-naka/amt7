@@ -27,12 +27,12 @@ socketio.on("user_list", function (msg) {
                 new_user_title.id = `id_${new_id}`;
                 new_user_title.innerText = new_id;
                 new_user_title.classList.add("text");
-                new_user_title.classList.add("inbox");
+                new_user_title.classList.add("child_box");
                 new_user_title.classList.add("title");
 
                 let new_user_video = document.createElement("video");
                 new_user_video.id = `video_${new_id}`;
-                new_user_video.classList.add("inbox");
+                new_user_video.classList.add("child_box");
                 new_user_video.classList.add("no_display");
                 new_user_video.setAttribute("playsinline", "");
                 new_user_video.setAttribute("autoplay", true);

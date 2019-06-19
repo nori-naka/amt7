@@ -19,28 +19,17 @@
 
 <body>
   <div id='map'></div>
+
   <div id="my_box" class="box box_width">
     <div class="title_box">
-      <div id="myUid" class="text inbox title"></div>
+      <div id="myUid" class="text child_box title"></div>
       <div class="rec_btn" id="rec_btn">REC</div>
     </div>
-    <video id="my_video" class="inbox video_width" playsinline autoplay muted></video>
+    <video id="my_video" class="child_box video_width" playsinline autoplay muted></video>
   </div>
   <div id="you_box" class="box">
-    <div id="user_list" class="text you_box box_width"></div>
+    <div id="user_list" class="text box_width"></div>
   </div>
-  <div id="call_audio_to_all" class="mic_btn blue_background"></div>
-
-  <!-- <div id="localBox" class="video_width">
-    <div class="title_box">
-      <div class="videoTitle" id="myVideoTitle">My ID</div>
-      <div class="rec_btn" id="rec_btn">REC</div>
-    </div>
-    <video id='local_video' autoplay loop muted playsinline></video>
-  </div>
-  <div id="remoteBox" class="video_width">
-    <div id="remote"></div>
-  </div> -->
 
   <!--
   input_name add 2019.05.24
@@ -70,7 +59,13 @@
     <button class="circle menuButton" id="mainMenuBtn">
       <img src="/pic/0.5x/menu_menu@0,5x.png" class="btnImg">
     </button>
-    <button class="circle menuButton" id="telBtn">
+    <!--
+        <div id="call_audio_to_all" class="mic_btn blue_background"></div>
+    -->
+    <!-- <button class="circle menuButton" id="telBtn" class="mic_btn blue_background">
+      <img src="/pic/0.5x/menu_tel@0,5x.png" class="btnImg">
+    </button> -->
+    <button id="call_audio_to_all" class="mic_btn blue_background">
       <img src="/pic/0.5x/menu_tel@0,5x.png" class="btnImg">
     </button>
     <button class="circle menuButton" id="videoBtn">
