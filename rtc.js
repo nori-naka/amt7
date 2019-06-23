@@ -25,7 +25,7 @@ let test_constraints = {
 var user_constraints = {
     video: {
         facingMode: "user",
-        width: 320,
+        width: 640,
         // height: 480,
         frameRate: { min: 1, max: 10 },
     },
@@ -35,15 +35,15 @@ var user_constraints = {
 var hide_constraints = {
     video: {
         facingMode: "environment",
-        width: 320,
+        width: 640,
         // height: 480,
         frameRate: { min: 1, max: 10 },
     },
     audio: true
 };
 
-// let constraints = user_constraints;
-let constraints = test_constraints;
+let constraints = user_constraints;
+// let constraints = test_constraints;
 
 const regist = function (id) {
     socketio.emit("regist", id);
