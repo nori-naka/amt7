@@ -212,6 +212,8 @@
   <script>
     var socketio = io.connect();
     var myUid;
+    var callback_get_mediaDevice = {};
+
     const LOG = function (msg) {
       if (typeof msg == "string") {
         var log_msg = {
@@ -252,12 +254,12 @@
   <!-- <script src="menu.js"></script>
   <script src='p2p.js'></script>
   <script src="flip.js"></script> -->
-  <script src="RECORD_layer/record.js"></script>
   <script src="map.js"></script>
 
   <script src="user_list.js"></script>
   <script src="rtc.js"></script>
 
+  <script src="RECORD_layer/record.js"></script>
   <script src="RECORD_layer/speech2text.js"></script>
   <script src="RECORD_layer/RECORD_layer.js"></script>
   <!-- <script src="exif.js"></script> -->

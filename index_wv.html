@@ -206,6 +206,8 @@
   <script>
     var socketio = io.connect();
     var myUid;
+    var callback_get_mediaDevice = {};
+
     const LOG = function (msg) {
       if (typeof msg == "string") {
         var log_msg = {

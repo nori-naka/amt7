@@ -50,23 +50,47 @@ const regist = function (id) {
 }
 
 
-const my_video_start = function (constraints, callback) {
+// const my_video_start = function (constraints, callback) {
+
+//     navigator.mediaDevices.getUserMedia(constraints)
+//         .then(function (stream) {
+//             local_stream = stream;
+
+//             $my_video.srcObject = local_stream;
+//             if (!callback) {
+//                 $my_video.play();
+//             } else {
+//                 $my_video.play().then(callback());
+//             }
+//         })
+//         .catch(function (err) {
+//             console.log("An error occurred: " + err);
+//         });
+// }
+
+const my_video_start = function (constraints) {
 
     navigator.mediaDevices.getUserMedia(constraints)
         .then(function (stream) {
             local_stream = stream;
 
             $my_video.srcObject = local_stream;
-            if (!callback) {
+
+            if (!callback_get_mediaDevice) {
                 $my_video.play();
             } else {
-                $my_video.play().then(callback());
+                $my_video.play().then(function () {
+                    Object.keys(callback_get_mediaDevice).forEach(function (func_name) {
+                        callback_get_mediaDevice[func_name]();
+                    })
+                });
             }
         })
         .catch(function (err) {
             console.log("An error occurred: " + err);
         });
 }
+
 
 $my_video.addEventListener("click", function (ev) {
 
@@ -454,7 +478,16 @@ const stop_video_to = function (remote_id) {
     delete video_senders[remote_id];
 }
 
-const replace_video_to_all = function () {
+// const replace_video_to_all = function () {
+//     local_stream.getVideoTracks().forEach(function (track) {
+
+//         Object.keys(video_senders).forEach(function (id) {
+//             video_senders[id].replaceTrack(track);
+//         })
+//     })
+// }
+
+callback_get_mediaDevice["replace_video_to_all"] = function () {
     local_stream.getVideoTracks().forEach(function (track) {
 
         Object.keys(video_senders).forEach(function (id) {

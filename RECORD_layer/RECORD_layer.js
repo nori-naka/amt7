@@ -45,6 +45,9 @@ RECORD_layer.add = function () {
         // RECORD_layer.log("position.json addOverlayer");
 
         init_memo_pop_elm();
+        callback_get_mediaDevice["RECORD_reg"] = function () {
+            new Record(local_stream, myUid, document.getElementById("rec_btn"));
+        }
 
         // layerに自信を登録する。
         layers.RECORD_layer = RECORD_layer;
