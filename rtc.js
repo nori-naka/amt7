@@ -4,13 +4,22 @@ const $your_video = document.getElementById("your_video");
 
 let peer = null;
 let local_stream = null;
-let peers = {};
 
 //-------------------------------------------------------------------------------
-// let constraints = {
-//     video: true,
-//     audio: true
-// }
+// peers = {
+//     id: {
+//         peer: PeerConnection,
+//         video_elm: video_HTML_element,
+//         audio_elm: audio_HTML_element
+//     },
+// }    
+// let peers = {};
+
+//-------------------------------------------------------------------------------
+let test_constraints = {
+    video: true,
+    audio: true
+}
 
 //-------------------------------------------------------------------------------
 var user_constraints = {
@@ -33,7 +42,8 @@ var hide_constraints = {
     audio: true
 };
 
-let constraints = user_constraints;
+// let constraints = user_constraints;
+let constraints = test_constraints;
 
 const regist = function (id) {
     socketio.emit("regist", id);
@@ -76,7 +86,7 @@ $my_video.addEventListener("click", function (ev) {
 })
 
 
-const createPeerConnection = function () {
+const createPeerConnection = function (remote_id) {
     peer = new RTCPeerConnection({
         //sdpSemantics: "unified-plan",
         sdpSemantics: "plan-b",
@@ -96,9 +106,9 @@ const createPeerConnection = function () {
         ]
     });
 
-    peer.onicecandidate = on_icecandidate;
-    peer.ontrack = on_track;
-    peer.onnegotiationneeded = on_negotiationneeded;
+    peer.onicecandidate = on_icecandidate(remote_id);
+    peer.ontrack = on_track(remote_id);
+    peer.onnegotiationneeded = on_negotiationneeded(remote_id);
     peer.onremovetrack = on_removetrack;
     peer.onremovestream = on_removestream;
     peer.oniceconnectionstatechange = on_iceconnectionstatechange;
@@ -113,7 +123,7 @@ const get_peer_id = function (a_peer) {
 
     let res = null;
     Object.keys(peers).forEach(function (id) {
-        if (peers[id] === a_peer) {
+        if (peers[id].peer === a_peer) {
             res = id;
             return;
         }
@@ -126,75 +136,143 @@ const on_connectionstatechange = function (ev) {
     LOG(`${myUid}: connection_state = ${peer.connectionState}`)
 }
 
-const on_icecandidate = function (ev) {
+// const on_icecandidate = function (ev) {
 
-    const remote_id = get_peer_id(this); // thisは呼び出し元のpeer
+//     const remote_id = get_peer_id(this); // thisは呼び出し元のpeer
 
-    if (!ev.candidate) {
-        LOG(`${myUid}: END candidate`);
-    } else {
-        LOG(`${myUid}: candidate ->${remote_id}`);
-        socketio.emit("publish", JSON.stringify({
-            type: "candidate",
-            dest: remote_id,
-            src: myUid,
-            candidate: ev.candidate
-        }));
-    }
-};
+//     if (!ev.candidate) {
+//         LOG(`${myUid}: END candidate`);
+//     } else {
+//         LOG(`${myUid}: candidate ->${remote_id}`);
+//         socketio.emit("publish", JSON.stringify({
+//             type: "candidate",
+//             dest: remote_id,
+//             src: myUid,
+//             candidate: ev.candidate
+//         }));
+//     }
+// };
 
-const on_negotiationneeded = function (ev) {
+const on_icecandidate = function (remote_id) {
+    return function (ev) {
 
-    const peer = ev.target;
-    const remote_id = get_peer_id(peer);
-
-    peer.createOffer()
-        .then(function (offer) {
-            return peer.setLocalDescription(offer);
-        })
-        .then(function () {
-            LOG(`${myUid}: offer ->${remote_id}`);
+        if (!ev.candidate) {
+            LOG(`${myUid}: END candidate`);
+        } else {
+            LOG(`${myUid}: candidate ->${remote_id}`);
             socketio.emit("publish", JSON.stringify({
-                type: "offer",
+                type: "candidate",
                 dest: remote_id,
                 src: myUid,
-                sdp: peer.localDescription
-            }))
-        })
+                candidate: ev.candidate
+            }));
+        }
+    };
 }
 
-const on_track = function (ev) {
+// const on_negotiationneeded = function (ev) {
 
-    let target_id = null;
-    Object.keys(peers).forEach(function(id){
-        if (peers[id] ==  ev.target){
-            target_id = id;
-            return;
-        }
-    });
+//     const peer = ev.target;
+//     const remote_id = get_peer_id(peer);
 
-    if (ev.track.kind == "video"){
-        let media_elm = document.getElementById(`video_${target_id}`);
-        media_elm.srcObject = ev.streams[0];
-        media_elm.classList.remove("no_display");
-        media_elm.play();
+//     peer.createOffer()
+//         .then(function (offer) {
+//             return peer.setLocalDescription(offer);
+//         })
+//         .then(function () {
+//             LOG(`${myUid}: offer ->${remote_id}`);
+//             socketio.emit("publish", JSON.stringify({
+//                 type: "offer",
+//                 dest: remote_id,
+//                 src: myUid,
+//                 sdp: peer.localDescription
+//             }))
+//         })
+// }
 
-        ev.streams[0].onremovetrack = function(ev){
-            media_elm.classList.add("no_display");
-        }
+const on_negotiationneeded = function (remote_id) {
+    return function (ev) {
 
-    } else {
-        let media_elm = document.getElementById(`audio_${target_id}`);
-        media_elm.srcObject = ev.streams[0];
-        media_elm.play();    
+        const peer = ev.target;
+        peer.createOffer()
+            .then(function (offer) {
+                return peer.setLocalDescription(offer);
+            })
+            .then(function () {
+                LOG(`${myUid}: offer ->${remote_id}`);
+                socketio.emit("publish", JSON.stringify({
+                    type: "offer",
+                    dest: remote_id,
+                    src: myUid,
+                    sdp: peer.localDescription
+                }))
+            })
+    }
+}
 
-        const $mic_btn = document.getElementById("call_audio_to_all");
-        $mic_btn.classList.add("green_background");
-    
-        ev.streams[0].onremovetrack = function(ev){
-            $mic_btn.classList.remove("green_background");
+
+
+// const on_track = function (ev) {
+
+//     let target_id = null;
+//     Object.keys(peers).forEach(function (id) {
+//         if (peers[id].peer == ev.target) {
+//             target_id = id;
+//             return;
+//         }
+//     });
+
+//     if (ev.track.kind == "video") {
+//         let media_elm = document.getElementById(`video_${target_id}`);
+//         media_elm.srcObject = ev.streams[0];
+//         media_elm.classList.remove("no_display");
+//         media_elm.play();
+
+//         ev.streams[0].onremovetrack = function (ev) {
+//             media_elm.classList.add("no_display");
+//         }
+
+//     } else {
+//         let media_elm = document.getElementById(`audio_${target_id}`);
+//         media_elm.srcObject = ev.streams[0];
+//         media_elm.play();
+
+//         const $mic_btn = document.getElementById("call_audio_to_all");
+//         $mic_btn.classList.add("green_background");
+
+//         ev.streams[0].onremovetrack = function (ev) {
+//             $mic_btn.classList.remove("green_background");
+//         }
+//     }
+// }
+
+const on_track = function (remote_id) {
+    return function (ev) {
+
+        if (ev.track.kind == "video") {
+            let media_elm = document.getElementById(`video_${remote_id}`);
+            media_elm.srcObject = ev.streams[0];
+            media_elm.classList.remove("no_display");
+            media_elm.play();
+
+            ev.streams[0].onremovetrack = function (ev) {
+                media_elm.classList.add("no_display");
+            }
+
+        } else {
+            let media_elm = document.getElementById(`audio_${remote_id}`);
+            media_elm.srcObject = ev.streams[0];
+            media_elm.play();
+
+            const $mic_btn = document.getElementById("call_audio_to_all");
+            $mic_btn.classList.add("green_background");
+
+            ev.streams[0].onremovetrack = function (ev) {
+                $mic_btn.classList.remove("green_background");
+            }
         }
     }
+
 }
 
 // WHY! onremovetrack is not work!
@@ -209,7 +287,7 @@ const on_removestream = function (ev) {
     // 発火元を調べる
     let target_id = null;
     Object.keys(peers).forEach(function (id) {
-        if (peers[id] === remote_peer) {
+        if (peers[id].peer === remote_peer) {
             target_id = id;
             return;
         }
@@ -252,25 +330,25 @@ const on_icegatheringstatechange = function (ev) {
 
 const recive_offer = function (data) {
 
-    if (!peers[data.src]) {
-        peers[data.src] = createPeerConnection();
+    if (!peers[data.src].peer) {
+        peers[data.src].peer = createPeerConnection(data.src);
     }
     LOG(`${data.src} -> ${myUid}: recive offer`)
 
     const desc = new RTCSessionDescription(data.sdp);
 
-    peers[data.src].setRemoteDescription(desc).then(function () {
-        return peers[data.src].createAnswer();
+    peers[data.src].peer.setRemoteDescription(desc).then(function () {
+        return peers[data.src].peer.createAnswer();
     })
         .then(function (answer) {
-            return peers[data.src].setLocalDescription(answer);
+            return peers[data.src].peer.setLocalDescription(answer);
         })
         .then(function () {
             socketio.emit("publish", JSON.stringify({
                 type: "answer",
                 dest: data.src,
                 src: myUid,
-                sdp: peers[data.src].localDescription
+                sdp: peers[data.src].peer.localDescription
             }))
         });
 }
@@ -279,7 +357,7 @@ const recive_answer = function (data) {
 
     const desc = new RTCSessionDescription(data.sdp);
     LOG(`${data.src} -> ${myUid}: recive answer`)
-    peers[data.src].setRemoteDescription(desc)
+    peers[data.src].peer.setRemoteDescription(desc)
         .catch(function (e) {
             LOG(`${myUid}: recive answer. but failed`)
         });
@@ -291,7 +369,7 @@ const recive_icecandidate = function (data) {
         LOG(`${myUid}: END recive candidate`);
     } else {
         let candidate = new RTCIceCandidate(data.candidate);
-        peers[data.src].addIceCandidate(candidate)
+        peers[data.src].peer.addIceCandidate(candidate)
             .catch(function (e) {
                 LOG(`${myUid}: addIceCandidate failed I am sorry`);
             });
@@ -362,17 +440,17 @@ let video_senders = {};
 let audio_sender = null;
 const call_video_to = function (remote_id) {
 
-    if (!peers[remote_id]) {
-        peers[remote_id] = createPeerConnection();
+    if (!peers[remote_id].peer) {
+        peers[remote_id].peer = createPeerConnection(remote_id);
     }
     local_stream.getVideoTracks().forEach(function (track) {
         LOG(track);
-        video_senders[remote_id] = peers[remote_id].addTrack(track, local_stream);
+        video_senders[remote_id] = peers[remote_id].peer.addTrack(track, local_stream);
     })
 }
 
 const stop_video_to = function (remote_id) {
-    peers[remote_id].removeTrack(video_senders[remote_id]);
+    peers[remote_id].peer.removeTrack(video_senders[remote_id]);
     delete video_senders[remote_id];
 }
 
@@ -387,12 +465,12 @@ const replace_video_to_all = function () {
 
 const call_audio = function (remote_id) {
 
-    if (!peers[remote_id]) {
-        peers[remote_id] = createPeerConnection();
+    if (!peers[remote_id].peer) {
+        peers[remote_id].peer = createPeerConnection(remote_id);
     }
     local_stream.getAudioTracks().forEach(function (track) {
         LOG(track);
-        audio_sender = peers[remote_id].addTrack(track, local_stream);
+        audio_sender = peers[remote_id].peer.addTrack(track, local_stream);
     })
 }
 
@@ -401,12 +479,12 @@ const call_audio_to_all = function () {
 
     last_list.forEach(function (id) {
         if (id != myUid) {
-            if (!peers[id]) {
-                peers[id] = createPeerConnection();
+            if (!peers[id].peer) {
+                peers[id].peer = createPeerConnection(id);
             }
             local_stream.getAudioTracks().forEach(function (track) {
                 LOG(`audio track ADD ${myUid}->${id}`);
-                cur_audio_senders[id] = peers[id].addTrack(track, local_stream);
+                cur_audio_senders[id] = peers[id].peer.addTrack(track, local_stream);
             });
         }
     })
@@ -416,14 +494,14 @@ const stop_audio_to_all = function () {
 
     Object.keys(cur_audio_senders).forEach(function (id) {
         LOG(`audio track REMOVE ${myUid}->${id}`);
-        peers[id].removeTrack(cur_audio_senders[id]);
+        peers[id].peer.removeTrack(cur_audio_senders[id]);
         delete cur_audio_senders[id];
         LOG(`cur_audio_senders=${JSON.stringify(cur_audio_senders)}`);
     })
 }
 
 const stop_audio_to = function () {
-    peers[remote_id].removeTrack(audio_sender);
+    peers[remote_id].peer.removeTrack(audio_sender);
     audio_sender = null;
 }
 
