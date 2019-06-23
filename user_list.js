@@ -67,7 +67,7 @@ socketio.on("user_list", function (msg) {
                     if (start_type == "start") {
                         start_type = "end";
                         // new_user_video.classList.add("no_display");
-                        peers[new_id].getRemoteStreams()[0].getVideoTracks().forEach(function (track) {
+                        peers[new_id].peer.getRemoteStreams()[0].getVideoTracks().forEach(function (track) {
                             track.stop();
                         });
                     } else {
