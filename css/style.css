@@ -362,12 +362,20 @@ div#writeMenu {
     display: none;
 }
 
+div.menuDiv_before{
+    z-index: 1000;
+    position: absolute;
+    left: 10px;
+    bottom: 80px;
+    height: 67px;
+}
 div.menuDiv {
     z-index: 1000;
     position: absolute;
     left: 10px;
     bottom: 20px;
-    height: 60px;
+    height: 67px;
+    white-space: nowrap;
 }
 
 div#weathMenu {
