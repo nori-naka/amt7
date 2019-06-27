@@ -1,6 +1,7 @@
 
 const $my_video = document.getElementById("my_video");
 const $your_video = document.getElementById("your_video");
+const isIOS = /[ \(]iP/.test(navigator.userAgent)
 
 let peer = null;
 let local_stream = null;
@@ -19,6 +20,7 @@ let local_stream = null;
 let test_constraints = {
     video: true,
     audio: true
+    // audio: false
 }
 
 //-------------------------------------------------------------------------------
@@ -30,6 +32,7 @@ var user_constraints = {
         frameRate: { min: 1, max: 10 },
     },
     audio: true
+    // audio: false
 };
 
 var hide_constraints = {
@@ -40,33 +43,16 @@ var hide_constraints = {
         frameRate: { min: 1, max: 10 },
     },
     audio: true
+    // audio: false
 };
 
-let constraints = user_constraints;
-// let constraints = test_constraints;
+// let constraints = user_constraints;
+let constraints = test_constraints;
 
 const regist = function (id) {
     socketio.emit("regist", id);
 }
 
-
-// const my_video_start = function (constraints, callback) {
-
-//     navigator.mediaDevices.getUserMedia(constraints)
-//         .then(function (stream) {
-//             local_stream = stream;
-
-//             $my_video.srcObject = local_stream;
-//             if (!callback) {
-//                 $my_video.play();
-//             } else {
-//                 $my_video.play().then(callback());
-//             }
-//         })
-//         .catch(function (err) {
-//             console.log("An error occurred: " + err);
-//         });
-// }
 
 const my_video_start = function (constraints) {
 
@@ -106,7 +92,7 @@ $my_video.addEventListener("click", function (ev) {
     } else {
         constraints = user_constraints;
     }
-    my_video_start(constraints, replace_video_to_all);
+    my_video_start(constraints);
 })
 
 
@@ -160,23 +146,6 @@ const on_connectionstatechange = function (ev) {
     LOG(`${myUid}: connection_state = ${peer.connectionState}`)
 }
 
-// const on_icecandidate = function (ev) {
-
-//     const remote_id = get_peer_id(this); // thisは呼び出し元のpeer
-
-//     if (!ev.candidate) {
-//         LOG(`${myUid}: END candidate`);
-//     } else {
-//         LOG(`${myUid}: candidate ->${remote_id}`);
-//         socketio.emit("publish", JSON.stringify({
-//             type: "candidate",
-//             dest: remote_id,
-//             src: myUid,
-//             candidate: ev.candidate
-//         }));
-//     }
-// };
-
 const on_icecandidate = function (remote_id) {
     return function (ev) {
 
@@ -193,26 +162,6 @@ const on_icecandidate = function (remote_id) {
         }
     };
 }
-
-// const on_negotiationneeded = function (ev) {
-
-//     const peer = ev.target;
-//     const remote_id = get_peer_id(peer);
-
-//     peer.createOffer()
-//         .then(function (offer) {
-//             return peer.setLocalDescription(offer);
-//         })
-//         .then(function () {
-//             LOG(`${myUid}: offer ->${remote_id}`);
-//             socketio.emit("publish", JSON.stringify({
-//                 type: "offer",
-//                 dest: remote_id,
-//                 src: myUid,
-//                 sdp: peer.localDescription
-//             }))
-//         })
-// }
 
 const on_negotiationneeded = function (remote_id) {
     return function (ev) {
@@ -233,42 +182,6 @@ const on_negotiationneeded = function (remote_id) {
             })
     }
 }
-
-
-
-// const on_track = function (ev) {
-
-//     let target_id = null;
-//     Object.keys(peers).forEach(function (id) {
-//         if (peers[id].peer == ev.target) {
-//             target_id = id;
-//             return;
-//         }
-//     });
-
-//     if (ev.track.kind == "video") {
-//         let media_elm = document.getElementById(`video_${target_id}`);
-//         media_elm.srcObject = ev.streams[0];
-//         media_elm.classList.remove("no_display");
-//         media_elm.play();
-
-//         ev.streams[0].onremovetrack = function (ev) {
-//             media_elm.classList.add("no_display");
-//         }
-
-//     } else {
-//         let media_elm = document.getElementById(`audio_${target_id}`);
-//         media_elm.srcObject = ev.streams[0];
-//         media_elm.play();
-
-//         const $mic_btn = document.getElementById("call_audio_to_all");
-//         $mic_btn.classList.add("green_background");
-
-//         ev.streams[0].onremovetrack = function (ev) {
-//             $mic_btn.classList.remove("green_background");
-//         }
-//     }
-// }
 
 const on_track = function (remote_id) {
     return function (ev) {

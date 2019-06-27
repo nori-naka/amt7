@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="css/spectrum.css" />
   <link rel="stylesheet" type="text/css" href="css/style.css" />
   <link rel="stylesheet" type="text/css" href="css/rtc.css" />
+  <link rel="stylesheet" type="text/css" href="modal.css" />
   <!--
 <link rel="stylesheet" href="css/JISYOU_LAYER.css" type="text/css">
 -->
@@ -54,6 +55,21 @@
       </div>
     </div>
   </div>
+
+  <!-- モーダルエリアここから -->
+  <section id="modalArea" class="modalArea">
+    <div id="modalBg" class="modalBg"></div>
+    <div class="modalWrapper">
+      <div class="modalContents">
+        <h1 id="modal_title">YYYYYY</h1>
+        <p id="modal_contents">YYYYYY</p>
+      </div>
+      <div id="closeModal" class="closeModal">
+        ×
+      </div>
+    </div>
+  </section>
+  <!-- モーダルエリアここまで -->
 
   <div id="mainMenu" class="menuDiv">
     <button class="circle menuButton" id="mainMenuBtn">
@@ -264,6 +280,7 @@
   <script src="RECORD_layer/RECORD_layer.js"></script>
   <!-- <script src="exif.js"></script> -->
   <script src="beacon.js"></script>
+  <script src="modal.js"></script>
 
   <!--
     record.jsはp2p.jsの後、

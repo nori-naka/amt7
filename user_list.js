@@ -46,7 +46,8 @@ socketio.on("user_list", function (msg) {
                 new_user_video.classList.add("child_box");
                 new_user_video.classList.add("no_display");
                 new_user_video.setAttribute("playsinline", "");
-                new_user_video.setAttribute("autoplay", true);
+                // new_user_video.setAttribute("autoplay", true);
+                new_user_video.setAttribute("muted", true);
                 peers[new_id] = {};
                 peers[new_id].video_elm = new_user_video;
 

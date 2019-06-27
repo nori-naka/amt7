@@ -368,7 +368,13 @@ div.menuDiv {
     left: 10px;
     bottom: 20px;
     height: 60px;
+    overflow-x: scroll;
+    white-space: nowrap;
 }
+div.menuDiv::-webkit-scrollbar {
+    display: none;
+}
+
 
 div#weathMenu {
     display: none;
