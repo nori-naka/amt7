@@ -6,8 +6,8 @@ const urlsToCache = [
     './exif.js',
     './flip.js',
     './map.js',
-    './menu.js',
-    './p2p.js',
+    './user_list.js',
+    './rtc.js',
     './css/ol.css',
     './css/spectrum.css',
     './css/style.css',
@@ -15,6 +15,10 @@ const urlsToCache = [
     './js/jquery.spectrum-ja.js',
     './js/jquery.tinycolorpicker.min.js',
     './js/ol.js'
+];
+
+const no_urlsToCache = [
+    '/RECORD_layer/position.json',
 ];
 
 self.addEventListener('install', (event) => {
@@ -46,6 +50,13 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+    if (event.request.method == "POST") return;
+
+    const pathname = new URL(event.request.url).pathname
+    no_urlsToCache.forEach((url_str)=>{
+        if (url_str == pathname) return;
+    });
+
     event.respondWith(
         caches.match(event.request)
             .then((response) => {
