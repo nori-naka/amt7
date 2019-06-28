@@ -92,30 +92,30 @@ socketio.on("user_list", function (msg) {
     last_list.forEach(function (last_list_item, index) {
         if (!Object.keys(data).includes(last_list_item)) {
 
-            // peerがあるという事は接続実績がある、と言う事。
-            if (peers[last_list_item].peer) {
-                if (peers[last_list_item].peer.iceConnectionState == "disconnected" || peers[last_list_item].peer.signalingState == "closed") {
+            // // peerがあるという事は接続実績がある、と言う事。
+            // if (peers[last_list_item].peer) {
+            //     if (peers[last_list_item].peer.iceConnectionState == "disconnected" || peers[last_list_item].peer.signalingState == "closed") {
 
-                    last_list.splice(index, 1);
+            //         last_list.splice(index, 1);
 
-                    const delete_user = document.getElementById(`user_${last_list_item}`);
-                    while (delete_user.firstChild) delete_user.removeChild(delete_user.firstChild);
-                    $user_list.removeChild(document.getElementById(`user_${last_list_item}`));
+            //         const delete_user = document.getElementById(`user_${last_list_item}`);
+            //         while (delete_user.firstChild) delete_user.removeChild(delete_user.firstChild);
+            //         $user_list.removeChild(document.getElementById(`user_${last_list_item}`));
 
-                    delete peers[last_list_item].peer;
-                    delete peers[last_list_item].video_elm;
-                    delete peers[last_list_item].audio_elm;
-                    delete peers[last_list_item];
+            //         delete peers[last_list_item].peer;
+            //         delete peers[last_list_item].video_elm;
+            //         delete peers[last_list_item].audio_elm;
+            //         delete peers[last_list_item];
 
-                }
-            } else {
-                last_list.splice(index, 1);
+            //     }
+            // } else {
+            last_list.splice(index, 1);
 
-                const delete_user = document.getElementById(`user_${last_list_item}`);
-                while (delete_user.firstChild) delete_user.removeChild(delete_user.firstChild);
-                $user_list.removeChild(document.getElementById(`user_${last_list_item}`));
+            const delete_user = document.getElementById(`user_${last_list_item}`);
+            while (delete_user.firstChild) delete_user.removeChild(delete_user.firstChild);
+            $user_list.removeChild(document.getElementById(`user_${last_list_item}`));
 
-            }
+            // }
 
         }
     })
