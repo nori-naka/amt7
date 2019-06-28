@@ -164,6 +164,7 @@ img.btnImg {
     left: 0px;
     width: 100%;
     height: 100%;
+    user-select: none;
 }
 
 img.btn50Img {
@@ -172,6 +173,7 @@ img.btn50Img {
     height: 50%;
     top: 50%;
     left: 50%;
+    user-select: none;
     -webkit-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
 }
@@ -374,13 +376,7 @@ div.menuDiv {
     position: absolute;
     left: 10px;
     bottom: 20px;
-<<<<<<< HEAD
-    height: 60px;
-    overflow-x: scroll;
-=======
     height: 67px;
->>>>>>> ab5dc2abcbbcce81fa255b19a6ac0622f9615511
-    white-space: nowrap;
 }
 div.menuDiv::-webkit-scrollbar {
     display: none;

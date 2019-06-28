@@ -72,6 +72,7 @@
     cursor:pointer;
     /*add by nori*/
     min-height: 30px;
+    user-select: none;
 }
 
 .rec_btn{
@@ -86,6 +87,7 @@
     height: 100%;
     cursor:pointer;
     z-index: 150;
+    user-select: none;
 }
 
 .blue_background {
@@ -115,7 +117,8 @@
     -webkit-border-radius: 67px;
 	color: #ffffff;
     outline: none;
-	transition: background-color,color 0.3s ease-in;   
+    transition: background-color,color 0.3s ease-in;
+    user-select: none;
 }
 
 .flip{
