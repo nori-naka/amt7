@@ -244,7 +244,7 @@ const on_iceconnectionstatechange = function (ev) {
         case "closed":
         case "failed":
         case "disconnected":
-            closeVideoCall(ev.target);
+            //closeVideoCall(ev.target);
             break;
     }
 }

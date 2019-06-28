@@ -362,13 +362,24 @@ div#writeMenu {
     display: none;
 }
 
+div.menuDiv_before{
+    z-index: 1000;
+    position: absolute;
+    left: 10px;
+    bottom: 80px;
+    height: 67px;
+}
 div.menuDiv {
     z-index: 1000;
     position: absolute;
     left: 10px;
     bottom: 20px;
+<<<<<<< HEAD
     height: 60px;
     overflow-x: scroll;
+=======
+    height: 67px;
+>>>>>>> ab5dc2abcbbcce81fa255b19a6ac0622f9615511
     white-space: nowrap;
 }
 div.menuDiv::-webkit-scrollbar {
