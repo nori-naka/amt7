@@ -38,7 +38,7 @@ socketio.on("user_list", function (msg) {
                 new_user_title.innerText = new_id;
                 new_user_title.classList.add("text");
                 new_user_title.classList.add("child_box");
-                new_user_title.classList.add("title");
+                new_user_title.classList.add("videoTitle");
 
                 // Video HTML Element
                 let new_user_video = document.createElement("video");
@@ -68,9 +68,9 @@ socketio.on("user_list", function (msg) {
                     if (start_type == "start") {
                         start_type = "end";
                         // new_user_video.classList.add("no_display");
-                        peers[new_id].peer.getRemoteStreams()[0].getVideoTracks().forEach(function (track) {
-                            track.stop();
-                        });
+                        // peers[new_id].peer.getRemoteStreams()[0].getVideoTracks().forEach(function (track) {
+                        //     track.stop();
+                        // });
                     } else {
                         start_type = "start";
                         // new_user_video.classList.remove("no_display");

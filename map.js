@@ -1373,24 +1373,24 @@ $("#videoBtn").on("click", function () {
         $("#localBox").hide();
         $("#remoteBox").hide();
         videoHides = [];
-        $(".videoTitle").each(function (i, elm) {
-            const id = elm.innerHTML;
-            if (remoteVideoElms[id]) {
-                videoHides.push(id);
-                watchEnd(id);
-            }
-        })
+        // $(".videoTitle").each(function (i, elm) {
+        //     const id = elm.innerHTML;
+        //     if (remoteVideoElms[id]) {
+        //         videoHides.push(id);
+        //         watchEnd(id);
+        //     }
+        // })
         //$("#videoBtn").css({"background-color": buttonBlue});
     } else {
         $("#localBox").show();
         $("#remoteBox").show();
-        $(".videoTitle").each(function (i, elm) {
-            const id = elm.innerHTML;
-            if (videoHides.indexOf(id) >= 0) {
-                enableButton();
-                watchStart(id);
-            }
-        })
+        // $(".videoTitle").each(function (i, elm) {
+        //     const id = elm.innerHTML;
+        //     if (videoHides.indexOf(id) >= 0) {
+        //         enableButton();
+        //         watchStart(id);
+        //     }
+        // })
         //$("#videoBtn").css({"background-color": buttonRed});
     }
     videoMode = !videoMode;

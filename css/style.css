@@ -368,7 +368,7 @@ div.menuDiv_before{
     z-index: 1000;
     position: absolute;
     left: 10px;
-    bottom: 80px;
+    bottom: 10px;
     height: 67px;
 }
 div.menuDiv {

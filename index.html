@@ -21,14 +21,14 @@
 <body>
   <div id='map'></div>
 
-  <div id="my_box" class="box box_width">
+  <div id="localBox" class="box box_width">
     <div class="title_box">
       <div id="myUid" class="text child_box title"></div>
       <div class="rec_btn" id="rec_btn">REC</div>
     </div>
     <video id="my_video" class="child_box video_width" playsinline autoplay muted></video>
   </div>
-  <div id="you_box" class="box">
+  <div id="remoteBox" class="box">
     <div id="user_list" class="text box_width"></div>
   </div>
 
@@ -76,12 +76,12 @@
       <img src="/pic/0.5x/menu_menu@0,5x.png" class="btnImg">
     </button>
     <!--
-        <div id="call_audio_to_all" class="mic_btn blue_background"></div>
+        <div id="send_audio_to_all" class="mic_btn blue_background"></div>
     -->
     <!-- <button class="circle menuButton" id="telBtn" class="mic_btn blue_background">
       <img src="/pic/0.5x/menu_tel@0,5x.png" class="btnImg">
     </button> -->
-    <button id="call_audio_to_all" class="mic_btn blue_background">
+    <button id="send_audio_to_all" class="mic_btn blue_background">
       <img src="/pic/0.5x/menu_tel@0,5x.png" class="btnImg">
     </button>
     <button class="circle menuButton" id="videoBtn">
@@ -98,23 +98,23 @@
       </button>
     </div>
     <div id="subMenu2" class="menuDiv">
-        <button class="circle menuButton" id="layerBtn">
-          <img src="/pic/0.5x/menu_layer@0,5x.png" class="btnImg">
-        </button>
-        <button class="circle menuButton" id="writeBtn">
-          <img src="/pic/0.5x/menu_hand@0,5x.png" class="btnImg">
-        </button>
-        <button class="circle menuButton" id="weathBtn">
-          <img src="/pic/0.5x/menu_weather@0,5x.png" class="btnImg">
-        </button>
-        <!-- <button class="circle menuButton" id="patBtn">
+      <button class="circle menuButton" id="layerBtn">
+        <img src="/pic/0.5x/menu_layer@0,5x.png" class="btnImg">
+      </button>
+      <button class="circle menuButton" id="writeBtn">
+        <img src="/pic/0.5x/menu_hand@0,5x.png" class="btnImg">
+      </button>
+      <button class="circle menuButton" id="weathBtn">
+        <img src="/pic/0.5x/menu_weather@0,5x.png" class="btnImg">
+      </button>
+      <!-- <button class="circle menuButton" id="patBtn">
           <img src="/pic/0.5x/menu_pato@0,5x.png" class="btnImg">
           <img src="/images/menu_jisyou.png" class="btnImg">     
         </button> -->
-        <button class="circle menuButton" id="memoBtn">
-          <img src="/pic/0.5x/menu_txt@0,5x.png" class="btn50Img">
-        </button>    
-      </div>
+      <button class="circle menuButton" id="memoBtn">
+        <img src="/pic/0.5x/menu_txt@0,5x.png" class="btn50Img">
+      </button>
+    </div>
   </div>
 
   <div id="writeMenu" class="menuDiv">

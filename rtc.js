@@ -46,31 +46,36 @@ var hide_constraints = {
     // audio: false
 };
 
-// let constraints = user_constraints;
-let constraints = test_constraints;
+let constraints = user_constraints;
+// let constraints = test_constraints;
 
 const regist = function (id) {
     socketio.emit("regist", id);
 }
 
 
-const my_video_start = function (constraints) {
+const my_video_start = function (constraints, callback) {
 
     navigator.mediaDevices.getUserMedia(constraints)
         .then(function (stream) {
             local_stream = stream;
 
             $my_video.srcObject = local_stream;
-
-            if (!callback_get_mediaDevice) {
+            if (!callback) {
                 $my_video.play();
             } else {
-                $my_video.play().then(function () {
-                    Object.keys(callback_get_mediaDevice).forEach(function (func_name) {
-                        callback_get_mediaDevice[func_name]();
-                    })
-                });
+                $my_video.play().then(callback());
             }
+
+            // if (!callback_get_mediaDevice) {
+            //     $my_video.play();
+            // } else {
+            //     $my_video.play().then(function () {
+            //         Object.keys(callback_get_mediaDevice).forEach(function (func_name) {
+            //             callback_get_mediaDevice[func_name]();
+            //         })
+            //     });
+            // }
         })
         .catch(function (err) {
             console.log("An error occurred: " + err);
@@ -92,7 +97,7 @@ $my_video.addEventListener("click", function (ev) {
     } else {
         constraints = user_constraints;
     }
-    my_video_start(constraints);
+    my_video_start(constraints, toggle_video);
 })
 
 
@@ -123,23 +128,23 @@ const createPeerConnection = function (remote_id) {
     peer.onremovestream = on_removestream;
     peer.oniceconnectionstatechange = on_iceconnectionstatechange;
     peer.onicegatheringstatechange = on_icegatheringstatechange;
-    peer.onsignalingstatechange = on_signalingstatechange;
+    peer.onsignalingstatechange = on_signalingstatechange(remote_id);
     peer.onconnectionstatechange = on_connectionstatechange;
 
     return peer;
 }
 
-const get_peer_id = function (a_peer) {
+// const get_peer_id = function (a_peer) {
 
-    let res = null;
-    Object.keys(peers).forEach(function (id) {
-        if (peers[id].peer === a_peer) {
-            res = id;
-            return;
-        }
-    });
-    return res;
-}
+//     let res = null;
+//     Object.keys(peers).forEach(function (id) {
+//         if (peers[id].peer === a_peer) {
+//             res = id;
+//             return;
+//         }
+//     });
+//     return res;
+// }
 
 
 const on_connectionstatechange = function (ev) {
@@ -201,7 +206,7 @@ const on_track = function (remote_id) {
             media_elm.srcObject = ev.streams[0];
             media_elm.play();
 
-            const $mic_btn = document.getElementById("call_audio_to_all");
+            const $mic_btn = document.getElementById("send_audio_to_all");
             $mic_btn.classList.add("green_background");
 
             ev.streams[0].onremovetrack = function (ev) {
@@ -249,15 +254,18 @@ const on_iceconnectionstatechange = function (ev) {
     }
 }
 
-const on_signalingstatechange = function (ev) {
-    let peer = ev.target;
+const on_signalingstatechange = function (remote_id) {
 
-    LOG(`${myUid}: signalingState = ${peer.signalingState}`);
+    return function (ev) {
+        let peer = ev.target;
 
-    switch (peer.signalingState) {
-        case "closed":
-            closeVideoCall(ev.target);
-            break;
+        LOG(`${myUid}: signalingState = ${peer.signalingState}`);
+
+        switch (peer.signalingState) {
+            case "closed":
+                closeVideoCall(remote_id);
+                break;
+        }
     }
 };
 
@@ -333,7 +341,7 @@ socketio.on("start", function (msg) {
 
     if (data.src) {
         if (data.type == "start") {
-            call_video_to(data.src);
+            send_video_to(data.src);
         } else {
             stop_video_to(data.src);
         }
@@ -373,22 +381,32 @@ function closeVideoCall(peer) {
 
 }
 
-let video_senders = {};
-let audio_sender = null;
-const call_video_to = function (remote_id) {
+const call_video = function (call_type, remote_id) {
+    socketio.emit("start", JSON.stringify({
+        type: call_type,
+        dest: remote_id,
+        src: myUid,
+    }));
+}
+
+const send_video_to = function (remote_id) {
 
     if (!peers[remote_id].peer) {
         peers[remote_id].peer = createPeerConnection(remote_id);
     }
     local_stream.getVideoTracks().forEach(function (track) {
-        LOG(track);
-        video_senders[remote_id] = peers[remote_id].peer.addTrack(track, local_stream);
+        peers[remote_id].peer.addTrack(track, local_stream);
     })
 }
 
 const stop_video_to = function (remote_id) {
-    peers[remote_id].peer.removeTrack(video_senders[remote_id]);
-    delete video_senders[remote_id];
+
+    const p = peers[remote_id].peer;
+    p.getSenders().forEach(function (sender) {
+        if (sender.track.kind == "video") {
+            p.removeTrack(sender);
+        }
+    })
 }
 
 // const replace_video_to_all = function () {
@@ -400,14 +418,36 @@ const stop_video_to = function (remote_id) {
 //     })
 // }
 
-callback_get_mediaDevice["replace_video_to_all"] = function () {
+// callback_get_mediaDevice["replace_video_to_all"] = function () {
+//     local_stream.getVideoTracks().forEach(function (track) {
+
+//         Object.keys(peers).forEach(function (id) {
+//             const p = peers[id].peer;
+//             p.getSenders().forEach(function (sender) {
+//                 if (sender.track.kind == "video") {
+//                     sender.replaceTrack(track);
+//                 }
+//             })
+//         })
+//         // Object.keys(video_senders).forEach(function (id) {
+//         //     video_senders[id].replaceTrack(track);
+//         // })
+//     })
+// }
+
+const toggle_video = function () {
     local_stream.getVideoTracks().forEach(function (track) {
 
-        Object.keys(video_senders).forEach(function (id) {
-            video_senders[id].replaceTrack(track);
+        Object.keys(peers).forEach(function (id) {
+            peers[id].peer.getSenders().forEach(function (sender) {
+                if (sender.track.kind == "video") {
+                    sender.replaceTrack(track);
+                }
+            })
         })
-    })
+    });
 }
+
 
 const call_audio = function (remote_id) {
 
@@ -416,47 +456,83 @@ const call_audio = function (remote_id) {
     }
     local_stream.getAudioTracks().forEach(function (track) {
         LOG(track);
-        audio_sender = peers[remote_id].peer.addTrack(track, local_stream);
+        peers[remote_id].peer.addTrack(track, local_stream);
     })
 }
 
-let cur_audio_senders = {};
-const call_audio_to_all = function () {
+// let cur_audio_senders = {};
+// const send_audio_to_all = function () {
 
-    last_list.forEach(function (id) {
+//     last_list.forEach(function (id) {
+//         if (id != myUid) {
+//             if (!peers[id].peer) {
+//                 peers[id].peer = createPeerConnection(id);
+//             }
+//             local_stream.getAudioTracks().forEach(function (track) {
+//                 LOG(`audio track ADD ${myUid}->${id}`);
+//                 cur_audio_senders[id] = peers[id].peer.addTrack(track, local_stream);
+//             });
+//         }
+//     })
+// }
+
+// const stop_audio_to_all = function () {
+
+//     Object.keys(cur_audio_senders).forEach(function (id) {
+//         LOG(`audio track REMOVE ${myUid}->${id}`);
+//         peers[id].peer.removeTrack(cur_audio_senders[id]);
+//         delete cur_audio_senders[id];
+//         LOG(`cur_audio_senders=${JSON.stringify(cur_audio_senders)}`);
+//     })
+// }
+
+
+const send_audio_to_all = function () {
+
+    Object.keys(peers).forEach(function (id) {
+
         if (id != myUid) {
             if (!peers[id].peer) {
                 peers[id].peer = createPeerConnection(id);
             }
-            local_stream.getAudioTracks().forEach(function (track) {
-                LOG(`audio track ADD ${myUid}->${id}`);
-                cur_audio_senders[id] = peers[id].peer.addTrack(track, local_stream);
-            });
         }
+        local_stream.getAudioTracks().forEach(function (track) {
+            LOG(`audio track ADD ${myUid}->${id}`);
+            peers[id].peer.addTrack(track, local_stream);
+        })
     })
 }
 
 const stop_audio_to_all = function () {
 
-    Object.keys(cur_audio_senders).forEach(function (id) {
+    Object.keys(peers).forEach(function (id) {
+
+        const p = peers[id].peer;
+        p.getSenders().forEach(function (sender) {
+            if (sender.track.kind == "audio") {
+                p.removeTrack(sender);
+            }
+        })
+
         LOG(`audio track REMOVE ${myUid}->${id}`);
-        peers[id].peer.removeTrack(cur_audio_senders[id]);
-        delete cur_audio_senders[id];
-        LOG(`cur_audio_senders=${JSON.stringify(cur_audio_senders)}`);
     })
 }
 
-const stop_audio_to = function () {
-    peers[remote_id].peer.removeTrack(audio_sender);
-    audio_sender = null;
+const stop_audio_to = function (id) {
+    const p = peers[id].peer;
+    p.getSenders().forEach(function (sender) {
+        if (sender.track.kind == "audio") {
+            p.removeTrack(sender);
+        }
+    })
 }
 
-const $mic_btn = document.getElementById("call_audio_to_all");
+const $mic_btn = document.getElementById("send_audio_to_all");
 $mic_btn.addEventListener("touchstart", function (ev) {
     ev.preventDefault();
 
     $mic_btn.classList.add("red_background");
-    call_audio_to_all();
+    send_audio_to_all();
 })
 $mic_btn.addEventListener("touchend", function (ev) {
     ev.preventDefault();
@@ -466,7 +542,7 @@ $mic_btn.addEventListener("touchend", function (ev) {
 })
 $mic_btn.addEventListener("mousedown", function (ev) {
     $mic_btn.classList.add("red_background");
-    call_audio_to_all();
+    send_audio_to_all();
 })
 $mic_btn.addEventListener("mouseup", function (ev) {
     $mic_btn.classList.remove("red_background");
