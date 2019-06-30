@@ -115,6 +115,7 @@ body {
     cursor:pointer;
     /*add by nori*/
     min-height: 30px;
+    user-select: none;
 }
 
 .remote_video{
