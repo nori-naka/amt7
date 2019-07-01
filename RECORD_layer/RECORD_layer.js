@@ -45,9 +45,10 @@ RECORD_layer.add = function () {
         // RECORD_layer.log("position.json addOverlayer");
 
         init_memo_pop_elm();
-        callback_get_mediaDevice["RECORD_reg"] = function () {
+        const RECORD_reg = function () {
             new Record(local_stream, myUid, document.getElementById("rec_btn"));
         }
+        callback_get_mediaDevice.push(RECORD_reg)
 
         // layerに自信を登録する。
         layers.RECORD_layer = RECORD_layer;
@@ -277,7 +278,7 @@ RECORD_layer.get_data = function (s) {
                 Object.keys(data).forEach(function (key) {
                     if (key == 'video') {
                         res = res + `<div class="user">
-                        <video src="${data[key]}" controls class="video"></video>
+                        <video src="${data[key]}" controls class="video box_width"></video>
                         <p>
                         <a href="#!" onclick= "delete_hash('${hash_key}');">削除</a>
                         </p>

@@ -54,32 +54,25 @@ const regist = function (id) {
 }
 
 
-const my_video_start = function (constraints, callback) {
+const my_video_start = function (constraints) {
 
     navigator.mediaDevices.getUserMedia(constraints)
         .then(function (stream) {
+
             local_stream = stream;
-
             $my_video.srcObject = local_stream;
-            if (!callback) {
-                $my_video.play();
-            } else {
-                $my_video.play().then(callback());
-            }
-
-            // if (!callback_get_mediaDevice) {
-            //     $my_video.play();
-            // } else {
-            //     $my_video.play().then(function () {
-            //         Object.keys(callback_get_mediaDevice).forEach(function (func_name) {
-            //             callback_get_mediaDevice[func_name]();
-            //         })
-            //     });
-            // }
+            return $my_video.play();
+        })
+        .then(function(){
+            callback_get_mediaDevice.forEach(function(callback){
+                callback();
+            })
         })
         .catch(function (err) {
             console.log("An error occurred: " + err);
         });
+
+    
 }
 
 
@@ -97,7 +90,7 @@ $my_video.addEventListener("click", function (ev) {
     } else {
         constraints = user_constraints;
     }
-    my_video_start(constraints, toggle_video);
+    my_video_start(constraints);
 })
 
 
@@ -447,6 +440,7 @@ const toggle_video = function () {
         })
     });
 }
+callback_get_mediaDevice.push(toggle_video);
 
 
 const call_audio = function (remote_id) {

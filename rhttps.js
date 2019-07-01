@@ -168,8 +168,8 @@ io.on("connection", function (socket) {
 
     // position_hash = 
     // {
-    //    XXXX: { "user_name": "xxx", "経度情報": "XXX", "緯度情報": "YYY", "年月日": "YYYY/MM/DD", "video": "/movie/file_name.webm" },
-    //    XXXY: { "user_name": "xxx", "経度情報": "XXX", "緯度情報": "YYY", "年月日": "YYYY/MM/DD", "video": "/movie/file_name.webm" },
+    //    XXXX: { "user_name": "xxx", "経度情報": "XXX", "緯度情報": "YYY", "年月日": "YYYY/MM/DD", "video": "/tmp/file_name.webm" },
+    //    XXXY: { "user_name": "xxx", "経度情報": "XXX", "緯度情報": "YYY", "年月日": "YYYY/MM/DD", "video": "/tmp/file_name.webm" },
     // }
 
     // クライアントから送信されるデータ（画像データ含む）
@@ -186,7 +186,7 @@ io.on("connection", function (socket) {
 
     socket.on("file", function (msg) {
 
-        console.log(`FILE on ${msg}`);
+        // console.log(`FILE on ${msg}`);
         var data = JSON.parse(msg);
 
         if (data.delete) {
@@ -198,7 +198,7 @@ io.on("connection", function (socket) {
 
             // video file save
             var file_content = data.blob.replace(/^data:video\/webm;base64,/, "")
-            fs.writeFile(`${__dirname}/movie/${data.name}`, file_content, "base64", function (err) {
+            fs.writeFile(`${__dirname}/tmp/${data.name}`, file_content, "base64", function (err) {
                 console.log(`socket.on_file: video_file write err=${err}`);
             });
 
@@ -208,7 +208,7 @@ io.on("connection", function (socket) {
                 "経度情報": data.lng,
                 "緯度情報": data.lat,
                 "年月日": data.date,
-                "video": "/movie/" + data.name
+                "video": "/tmp/" + data.name
             };
         } else {
             position_hash[getUniqueStr()] = {

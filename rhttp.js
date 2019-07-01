@@ -17,7 +17,6 @@ var mime = {
     ".webm": "video/webm"
 };
 
-
 var json_filename = "./RECORD_layer/position.json";
 var out_str = fs.readFileSync(json_filename, 'utf8')
 var position_hash = JSON.parse(out_str)
@@ -29,12 +28,21 @@ var options = {
 
 const getUniqueId = getUniqueIdMaker();
 
+const LOG = function (flag, msg) {
+    if (!flag) return;
+    console.log(`${new Date().toLocaleString()}:${msg}`)
+}
+// LOG FLAG
+USER_LIST_LOG_FLAG = false;
+MSG_LOG_FLAG = true;
+SERVER_LOG_FLAG = false;
+
 var allDraw = [];
 
 // サーバの初期化
 //var server = require("https").createServer(options, function (req, res) {
 var server = require("http").createServer(function (req, res) {
-        var urlParse = url.parse(req.url, true);
+    var urlParse = url.parse(req.url, true);
 
     // User-Agent : WebView detected
     var ua_str = JSON.stringify(req.headers['user-agent'])
@@ -60,7 +68,8 @@ var server = require("http").createServer(function (req, res) {
     var fullPath = __dirname + filePath;
     fs.readFile(fullPath, function (err, data) {
         if (err) {
-            console.log("NO FILE: " + filePath);
+            // console.log("NO FILE: " + filePath);
+            LOG(SERVER_LOG_FLAG, `NO FILE= ${filePath}`)
             res.writeHead(500);
             res.end('Error loading ' + filePath);
         } else {
@@ -104,20 +113,25 @@ io.on("connection", function (socket) {
     // ログメッセージ
     socket.on("log", function (msg) {
         var data = JSON.parse(msg);
-        console.log(`from=${data.id} // text=${data.text}`);
+        // console.log(`from=${data.id} // text=${data.text}`);
+        LOG(MSG_LOG_FLAG, `from=${data.id} // ${data.text}`);
     });
 
     // 接続開始
     socket.on("connected", function (_id) {
-        console.log('ENTERED:' + _id);
+        // console.log('ENTERED:' + _id);
+        LOG(USER_LIST_LOG_FLAG, 'ENTERED:' + _id)
         user_sid[_id] = socket.id;
         socket.broadcast.emit("start", { id: _id });
-        console.log("CONNECTED: USER_ID=" + _id + " USER_SID=" + JSON.stringify(user_sid));
+        // console.log("CONNECTED: USER_ID=" + _id + " USER_SID=" + JSON.stringify(user_sid));
+        LOG(USER_LIST_LOG_FLAG, "CONNECTED: USER_ID=" + _id + " USER_SID=" + JSON.stringify(user_sid));
     });
 
     // 登録
     socket.on("regist", function (_id) {
-        console.log('ON REGIST:' + _id);
+        // console.log('ON REGIST:' + _id);
+        LOG(USER_LIST_LOG_FLAG, 'ON REGIST:' + _id);
+
         user_sid[_id] = socket.id;
         socket.broadcast.emit("regist", JSON.stringify({ id: _id }));
         socket.emit("alldraw", JSON.stringify(allDraw));
@@ -143,7 +157,8 @@ io.on("connection", function (socket) {
     // P2P開始
     socket.on("start", function (msg) {
         var data = JSON.parse(msg);
-        console.log(`ON START: ${data.src} -> ${data.dest}  MSG=${msg}`);
+        // console.log(`ON START: ${data.src} -> ${data.dest}  MSG=${msg}`);
+        LOG(MSG_LOG_FLAG, `ON START: ${data.src} -> ${data.dest}  MSG=${msg}`);
         if (data.dest) {
             socket.to(user_sid[data.dest]).emit("start", msg);
         } else {
@@ -154,8 +169,8 @@ io.on("connection", function (socket) {
 
     // position_hash = 
     // {
-    //    XXXX: { "user_name": "xxx", "経度情報": "XXX", "緯度情報": "YYY", "年月日": "YYYY/MM/DD", "video": "/movie/file_name.webm" },
-    //    XXXY: { "user_name": "xxx", "経度情報": "XXX", "緯度情報": "YYY", "年月日": "YYYY/MM/DD", "video": "/movie/file_name.webm" },
+    //    XXXX: { "user_name": "xxx", "経度情報": "XXX", "緯度情報": "YYY", "年月日": "YYYY/MM/DD", "video": "/tmp/file_name.webm" },
+    //    XXXY: { "user_name": "xxx", "経度情報": "XXX", "緯度情報": "YYY", "年月日": "YYYY/MM/DD", "video": "/tmp/file_name.webm" },
     // }
 
     // クライアントから送信されるデータ（画像データ含む）
@@ -172,7 +187,7 @@ io.on("connection", function (socket) {
 
     socket.on("file", function (msg) {
 
-        console.log(`FILE on ${msg}`);
+        // console.log(`FILE on ${msg}`);
         var data = JSON.parse(msg);
 
         if (data.delete) {
@@ -184,7 +199,7 @@ io.on("connection", function (socket) {
 
             // video file save
             var file_content = data.blob.replace(/^data:video\/webm;base64,/, "")
-            fs.writeFile(`${__dirname}/movie/${data.name}`, file_content, "base64", function (err) {
+            fs.writeFile(`${__dirname}/tmp/${data.name}`, file_content, "base64", function (err) {
                 console.log(`socket.on_file: video_file write err=${err}`);
             });
 
@@ -194,7 +209,7 @@ io.on("connection", function (socket) {
                 "経度情報": data.lng,
                 "緯度情報": data.lat,
                 "年月日": data.date,
-                "video": "/movie/" + data.name
+                "video": "/tmp/" + data.name
             };
         } else {
             position_hash[getUniqueStr()] = {
@@ -227,7 +242,8 @@ io.on("connection", function (socket) {
     // 位置情報着信
     socket.on("renew", function (msg) {
         var data = JSON.parse(msg);
-        console.log(`ON RENEW : From=${data.id} LAT=${data.lat} LNG=${data.lng} CAM=${data.cam} NAME=${data.name}`);
+        // console.log(`ON RENEW : From=${data.id} LAT=${data.lat} LNG=${data.lng} CAM=${data.cam} NAME=${data.name}`);
+        LOG(USER_LIST_LOG_FLAG, `ON RENEW : From=${data.id} LAT=${data.lat} LNG=${data.lng} CAM=${data.cam} NAME=${data.name}`);
 
         if (data.id) {
             userHash[data.id] = { lat: data.lat, lng: data.lng, ttl: ttlVal, cam: data.cam, name: data.name };
@@ -238,7 +254,7 @@ io.on("connection", function (socket) {
     // カメラ情報設定
     socket.on("camera", function (msg) {
         var data = JSON.parse(msg);
-        console.log(`ON CAMERA : ID=${data.id} CAM=${data.cam}`);
+        // console.log(`ON CAMERA : ID=${data.id} CAM=${data.cam}`);
 
         if (data.id) {
             if (userHash[data.id]) {
@@ -253,7 +269,8 @@ io.on("connection", function (socket) {
 
     // 切断
     socket.on("disconnect", function (reason) {
-        console.log(`DISCONNECT msg=${reason}`);
+        // console.log(`DISCONNECT msg=${reason}`);
+        LOG(USER_LIST_LOG_FLAG, `DISCONNECT msg=${reason}`);
         //console.log(`socket.id=${socket.id}`);
         //if (reason.indexOf("transport error") != -1) {
         // Object.keys(user_sid).forEach(function(_id){
@@ -297,7 +314,8 @@ io.on("connection", function (socket) {
 
     // ユーザリスト
     socket.on("user_list", function (msg) {
-        console.log(`recive user_list=${msg}`)
+        // console.log(`recive user_list=${msg}`)
+        LOG(USER_LIST_LOG_FLAG, `recive user_list=${msg}`)
         var data = JSON.parse(msg);
 
         if (data.id) {
@@ -305,23 +323,35 @@ io.on("connection", function (socket) {
         }
     });
 
-    setInterval(function () {
-        console.log(`USER_LIST=${JSON.stringify(user_list)}`);
-        io.emit("user_list", JSON.stringify(user_list));
-    }, 5000);
+    // setInterval(function () {
+    //     console.log(`USER_LIST=${JSON.stringify(user_list)}`);
+    //     io.emit("user_list", JSON.stringify(user_list));
+    // }, 5000);
 
-    setInterval(function () {
-        io.emit("renew", JSON.stringify(userHash));
-    }, 1500);
+    // setInterval(function () {
+    //     io.emit("renew", JSON.stringify(userHash));
+    // }, 1500);
 
 });
+
+setInterval(function () {
+    // console.log(`USER_LIST=${JSON.stringify(user_list)}`);
+    LOG(USER_LIST_LOG_FLAG, `SEND USER_LIST=${JSON.stringify(user_list)}`);
+    io.emit("user_list", JSON.stringify(user_list));
+}, 5000);
+
+setInterval(function () {
+    io.emit("renew", JSON.stringify(userHash));
+}, 1500);
+
 
 setInterval(function () {
     Object.keys(user_list).forEach(function (id) {
         user_list[id].ttl = user_list[id].ttl - 1;
         if (user_list[id].ttl < 0) {
             delete user_list[id];
-            console.log(`DELETE id=${id} USER_LIST=${JSON.stringify(user_list)}`);
+            // console.log(`DELETE id=${id} USER_LIST=${JSON.stringify(user_list)}`);
+            LOG(USER_LIST_LOG_FLAG, `DELETE id=${id} USER_LIST=${JSON.stringify(user_list)}`);
         }
     });
 }, 5000);
@@ -335,7 +365,8 @@ setInterval(function () {
             if (userHash[id].ttl < 0) {
                 delete userHash[id];
                 //delete user_sid[id];
-                console.log(`DELETE id=${id} USER_HASH=${JSON.stringify(userHash)}`);
+                // console.log(`DELETE id=${id} USER_HASH=${JSON.stringify(userHash)}`);
+                LOG(USER_LIST_LOG_FLAG, `DELETE id=${id} USER_HASH=${JSON.stringify(userHash)}`);
             }
         });
     }
