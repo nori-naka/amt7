@@ -199,7 +199,7 @@ io.on("connection", function (socket) {
 
             // video file save
             var file_content = data.blob.replace(/^data:video\/webm;base64,/, "")
-            fs.writeFile(`${__dirname}/tmp/${data.name}`, file_content, "base64", function (err) {
+            fs.writeFile(`./tmp/${data.name}`, file_content, "base64", function (err) {
                 console.log(`socket.on_file: video_file write err=${err}`);
             });
 
