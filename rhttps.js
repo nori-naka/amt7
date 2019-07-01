@@ -198,9 +198,15 @@ io.on("connection", function (socket) {
 
             // video file save
             var file_content = data.blob.replace(/^data:video\/webm;base64,/, "")
-            fs.writeFile(`${__dirname}/tmp/${data.name}`, file_content, "base64", function (err) {
-                console.log(`socket.on_file: video_file write err=${err}`);
-            });
+            fs.writeFile(`./tmp/${data.name}`, file_content, "base64", 
+                function (err) {
+                    if (err){
+                        console.log(`socket.on_file: video_file write err=${err}`);
+                    } else {
+                        console.log(`FILE WRITE SUCCESS : ${data.name}`)
+                    }
+                }
+            );
 
             // position_hash file save
             position_hash[getUniqueStr()] = {
@@ -210,6 +216,7 @@ io.on("connection", function (socket) {
                 "年月日": data.date,
                 "video": "/tmp/" + data.name
             };
+            
         } else {
             position_hash[getUniqueStr()] = {
                 "記録者": data.user_name,
@@ -219,9 +226,15 @@ io.on("connection", function (socket) {
                 "memo": data.memo
             };
         }
-        fs.writeFile(json_filename, JSON.stringify(position_hash), function (err) {
-            console.log(`socket.on_file: position_hash write err=${err}`);
-        })
+        fs.writeFile(json_filename, JSON.stringify(position_hash), 
+            function (err) {
+                if (err){
+                    console.log(`socket.on_file: position_hash write err=${err}`);
+                } else {
+                    console.log(`FILE WRITE SUCCESS : ${data.name}`)
+                }
+            }
+        )
 
     });
 

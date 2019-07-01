@@ -71,8 +71,6 @@ const my_video_start = function (constraints) {
         .catch(function (err) {
             console.log("An error occurred: " + err);
         });
-
-    
 }
 
 
@@ -544,4 +542,4 @@ $mic_btn.addEventListener("mouseup", function (ev) {
 })
 
 regist(myUid);
-my_video_start(constraints);
+// my_video_start(constraints);
