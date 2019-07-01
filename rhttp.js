@@ -39,6 +39,12 @@ SERVER_LOG_FLAG = false;
 
 var allDraw = [];
 
+fs.mkdir("tmp", function(err){
+    if (err) console.log(`ERROR MKDIR : TMP Folder :$`);
+    else console.log(`MKDIR TMP Folder SUCCEES`);
+})
+
+
 // サーバの初期化
 //var server = require("https").createServer(options, function (req, res) {
 var server = require("http").createServer(function (req, res) {
