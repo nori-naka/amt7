@@ -198,7 +198,7 @@ io.on("connection", function (socket) {
 
             // video file save
             var file_content = data.blob.replace(/^data:video\/webm;base64,/, "")
-            fs.writeFile(`./tmp/${data.name}`, file_content, "base64", 
+            fs.writeFile(`/tmp/${data.name}`, file_content, "base64", 
                 function (err) {
                     if (err){
                         console.log(`socket.on_file: video_file write err=${err}`);
@@ -216,7 +216,7 @@ io.on("connection", function (socket) {
                 "年月日": data.date,
                 "video": "/tmp/" + data.name
             };
-            
+
         } else {
             position_hash[getUniqueStr()] = {
                 "記録者": data.user_name,
