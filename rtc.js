@@ -46,8 +46,8 @@ var hide_constraints = {
     // audio: false
 };
 
-// let constraints = user_constraints;
-let constraints = test_constraints;
+let constraints = user_constraints;
+// let constraints = test_constraints;
 
 const regist = function (id) {
     socketio.emit("regist", id);
