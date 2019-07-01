@@ -209,7 +209,7 @@ io.on("connection", function (socket) {
                 "経度情報": data.lng,
                 "緯度情報": data.lat,
                 "年月日": data.date,
-                "video": "/tmp/" + data.name
+                "video": "./tmp/" + data.name
             };
         } else {
             position_hash[getUniqueStr()] = {
