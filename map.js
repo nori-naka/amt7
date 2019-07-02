@@ -1,7 +1,7 @@
 var map;
 var mapView;
 const zoomVal = 14;
-const mapCenterCoord = [140.034635, 35.648209]; //幕張メッセ イベントホール
+const mapCenterCoord = [135.51928809296075, 34.68862986290267]; //近畿地整
 
 var myCamera = false;
 
@@ -85,6 +85,7 @@ input_name();
 // Lat, Lon { null:GPSを使用、数値:入力した緯度経度固定 }
 // ここにないIDの場合は [0, null, null] で動作
 specials = {
+    "本部": [1, 135.51928809296075, 34.68862986290267], // 近畿地整本局
     "防対室": [1, 127.74864, 26.24811], // 沖縄NEXCO西原
     "ControlCenter": [1, 140.034635, 35.648209], //幕張メッセ イベントホール
     "SmartPhone1": [1, 140.041966, 35.648417], //海浜幕張駅
