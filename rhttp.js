@@ -30,7 +30,8 @@ const getUniqueId = getUniqueIdMaker();
 
 const LOG = function (flag, msg) {
     if (!flag) return;
-    console.log(`${new Date().toLocaleString()}:${msg}`)
+    console.log(`${new Date().toLocaleString()}:${msg}`);
+    // console.dir(user_sid)
 }
 // LOG FLAG
 USER_LIST_LOG_FLAG = false;
@@ -39,11 +40,10 @@ SERVER_LOG_FLAG = false;
 
 var allDraw = [];
 
-fs.mkdir("tmp", function(err){
+fs.mkdir("tmp", function (err) {
     if (err) console.log(`ERROR MKDIR : TMP Folder :$`);
     else console.log(`MKDIR TMP Folder SUCCEES`);
 })
-
 
 // サーバの初期化
 //var server = require("https").createServer(options, function (req, res) {
@@ -116,6 +116,11 @@ var getUniqueStr = function (myStrong) {
 // イベントの定義
 io.on("connection", function (socket) {
 
+    console.log(`----------------------CONNECTION=${socket.id}------------------`);
+    // socket.to(socket.id).emit("req-regist", {});
+    socket.emit("req-regist", "HELLO");
+
+
     // ログメッセージ
     socket.on("log", function (msg) {
         var data = JSON.parse(msg);
@@ -139,6 +144,8 @@ io.on("connection", function (socket) {
         LOG(USER_LIST_LOG_FLAG, 'ON REGIST:' + _id);
 
         user_sid[_id] = socket.id;
+        console.log(`changed user_sid `);
+        console.dir(user_sid);
         socket.broadcast.emit("regist", JSON.stringify({ id: _id }));
         socket.emit("alldraw", JSON.stringify(allDraw));
     });
@@ -205,9 +212,9 @@ io.on("connection", function (socket) {
 
             // video file save
             var file_content = data.blob.replace(/^data:video\/webm;base64,/, "")
-            fs.writeFile(`./tmp/${data.name}`, file_content, "base64", 
+            fs.writeFile(`/tmp/${data.name}`, file_content, "base64",
                 function (err) {
-                    if (err){
+                    if (err) {
                         console.log(`socket.on_file: video_file write err=${err}`);
                     } else {
                         console.log(`FILE WRITE SUCCESS : ${data.name}`)
@@ -223,7 +230,7 @@ io.on("connection", function (socket) {
                 "年月日": data.date,
                 "video": "/tmp/" + data.name
             };
-            
+
         } else {
             position_hash[getUniqueStr()] = {
                 "記録者": data.user_name,
@@ -233,9 +240,9 @@ io.on("connection", function (socket) {
                 "memo": data.memo
             };
         }
-        fs.writeFile(json_filename, JSON.stringify(position_hash), 
+        fs.writeFile(json_filename, JSON.stringify(position_hash),
             function (err) {
-                if (err){
+                if (err) {
                     console.log(`socket.on_file: position_hash write err=${err}`);
                 } else {
                     console.log(`FILE WRITE SUCCESS : ${data.name}`)
@@ -338,6 +345,7 @@ io.on("connection", function (socket) {
         var data = JSON.parse(msg);
 
         if (data.id) {
+            user_sid[data.id] = socket.id
             user_list[data.id] = { ttl: ttlVal, name: data.name };
         }
     });
@@ -369,8 +377,9 @@ setInterval(function () {
         user_list[id].ttl = user_list[id].ttl - 1;
         if (user_list[id].ttl < 0) {
             delete user_list[id];
+            delete user_sid[id];
             // console.log(`DELETE id=${id} USER_LIST=${JSON.stringify(user_list)}`);
-            LOG(USER_LIST_LOG_FLAG, `DELETE id=${id} USER_LIST=${JSON.stringify(user_list)}`);
+            LOG(USER_LIST_LOG_FLAG, `DELETE id=${id} USER_LIST=${JSON.stringify(user_list)} USER_SID=${JSON.stringify(user_sid)}`);
         }
     });
 }, 5000);
