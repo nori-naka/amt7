@@ -50,6 +50,7 @@ let constraints = user_constraints;
 // let constraints = test_constraints;
 
 const regist = function (id) {
+    LOG(`REGIST: myUid=${myUid}`)
     socketio.emit("regist", id);
 }
 
@@ -63,8 +64,8 @@ const my_video_start = function (constraints) {
             $my_video.srcObject = local_stream;
             return $my_video.play();
         })
-        .then(function(){
-            callback_get_mediaDevice.forEach(function(callback){
+        .then(function () {
+            callback_get_mediaDevice.forEach(function (callback) {
                 callback();
             })
         })
@@ -340,6 +341,11 @@ socketio.on("start", function (msg) {
 
 });
 
+socketio.on("req-regist", function (msg) {
+    console.log(`recive req-regist : ${msg}`);
+    regist(myUid);
+})
+
 
 const reportError = function (err) {
     console.log(`ERROR : ${err}`);
@@ -386,7 +392,7 @@ const send_video_to = function (remote_id) {
         peers[remote_id].peer = createPeerConnection(remote_id);
     }
     local_stream.getVideoTracks().forEach(function (track) {
-        peers[remote_id].peer.addTrack(track, local_stream);
+        peers[remote_id].peer.addTrack(track);
     })
 }
 
@@ -448,7 +454,7 @@ const call_audio = function (remote_id) {
     }
     local_stream.getAudioTracks().forEach(function (track) {
         LOG(track);
-        peers[remote_id].peer.addTrack(track, local_stream);
+        peers[remote_id].peer.addTrack(track);
     })
 }
 
@@ -462,7 +468,7 @@ const call_audio = function (remote_id) {
 //             }
 //             local_stream.getAudioTracks().forEach(function (track) {
 //                 LOG(`audio track ADD ${myUid}->${id}`);
-//                 cur_audio_senders[id] = peers[id].peer.addTrack(track, local_stream);
+//                 cur_audio_senders[id] = peers[id].peer.addTrack(track);
 //             });
 //         }
 //     })
@@ -490,7 +496,7 @@ const send_audio_to_all = function () {
         }
         local_stream.getAudioTracks().forEach(function (track) {
             LOG(`audio track ADD ${myUid}->${id}`);
-            peers[id].peer.addTrack(track, local_stream);
+            peers[id].peer.addTrack(track);
         })
     })
 }

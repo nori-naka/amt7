@@ -65,16 +65,24 @@ socketio.on("user_list", function (msg) {
                 let start_type = "end"
                 new_user_title.addEventListener("click", function (ev) {
 
-                    if (start_type == "start") {
-                        start_type = "end";
-                        // new_user_video.classList.add("no_display");
-                        // peers[new_id].peer.getRemoteStreams()[0].getVideoTracks().forEach(function (track) {
-                        //     track.stop();
-                        // });
-                    } else {
-                        start_type = "start";
-                        // new_user_video.classList.remove("no_display");
+                    let now_receiving = false;
+                    if (peers[new_id].peer) {
+                        peers[new_id].peer.getReceivers().forEach(function (receiver) {
+                            if (receiver.track && receiver.track.kind == "video") {
+                                now_receiving = true;
+                                return;
+                            }
+                        });
                     }
+
+                    if (now_receiving) {
+                        // 映像着信中なので、切断する。
+                        start_type = "end";
+                    } else {
+                        // 映像未着信なので、接続する。
+                        start_type = "start";
+                    }
+
                     socketio.emit("start", JSON.stringify({
                         type: start_type,
                         dest: new_id,
