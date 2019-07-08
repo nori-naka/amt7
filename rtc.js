@@ -392,7 +392,17 @@ const send_video_to = function (remote_id) {
         peers[remote_id].peer = createPeerConnection(remote_id);
     }
     local_stream.getVideoTracks().forEach(function (track) {
-        peers[remote_id].peer.addTrack(track);
+
+        let now_sending_video = false;
+        peers[remote_id].peer.getSenders().forEach(function (sender) {
+            if (sender.track && sender.track.kind == "video") {
+                now_sending_video = true;
+                return;
+            }
+        });
+        if (!now_sending_video) {
+            peers[remote_id].peer.addTrack(track);
+        }
     })
 }
 
