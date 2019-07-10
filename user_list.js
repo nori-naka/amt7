@@ -62,8 +62,10 @@ socketio.on("user_list", function (msg) {
 
                 $user_list.appendChild(new_user);
 
-                let start_type = "end"
+                let start_type = "end";
                 new_user_title.addEventListener("click", function (ev) {
+
+                    if (!is_serv_connectivity) return;
 
                     let now_receiving = false;
                     if (peers[new_id].peer) {
@@ -88,6 +90,7 @@ socketio.on("user_list", function (msg) {
                         dest: new_id,
                         src: myUid,
                     }));
+                    is_serv_connectivity = false;
                 })
             }
         }

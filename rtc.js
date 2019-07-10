@@ -5,6 +5,7 @@ const isIOS = /[ \(]iP/.test(navigator.userAgent)
 
 let peer = null;
 let local_stream = null;
+let is_serv_connectivity = true;
 
 //-------------------------------------------------------------------------------
 // peers = {
@@ -118,29 +119,12 @@ const createPeerConnection = function (remote_id) {
     peer.onnegotiationneeded = on_negotiationneeded(remote_id);
     peer.onremovetrack = on_removetrack;
     peer.onremovestream = on_removestream;
-    peer.oniceconnectionstatechange = on_iceconnectionstatechange;
+    peer.oniceconnectionstatechange = on_iceconnectionstatechange(remote_id);
     peer.onicegatheringstatechange = on_icegatheringstatechange;
     peer.onsignalingstatechange = on_signalingstatechange(remote_id);
-    peer.onconnectionstatechange = on_connectionstatechange;
+    peer.onconnectionstatechange = on_connectionstatechange(remote_id);
 
     return peer;
-}
-
-// const get_peer_id = function (a_peer) {
-
-//     let res = null;
-//     Object.keys(peers).forEach(function (id) {
-//         if (peers[id].peer === a_peer) {
-//             res = id;
-//             return;
-//         }
-//     });
-//     return res;
-// }
-
-
-const on_connectionstatechange = function (ev) {
-    LOG(`${myUid}: connection_state = ${peer.connectionState}`)
 }
 
 const on_icecandidate = function (remote_id) {
@@ -231,18 +215,37 @@ const on_removestream = function (ev) {
 
 }
 
+const on_connectionstatechange = function (remote_id) {
 
-const on_iceconnectionstatechange = function (ev) {
-    let peer = ev.target;
+    return function (ev) {
+        let peer = ev.target;
+        LOG(`${myUid}: connection_state = ${peer.connectionState}`);
 
-    LOG(`${myUid}: iceconnectionState = ${peer.iceConnectionState}`);
+        switch (peer.connectionState) {
+            case "closed":
+            case "failed":
+            case "disconnected":
+                closeVideoCall(remote_id);
+                break;
+        }
+    }
 
-    switch (peer.iceConnectionState) {
-        case "closed":
-        case "failed":
-        case "disconnected":
-            //closeVideoCall(ev.target);
-            break;
+}
+
+// 何故か、こちらは発火しない。connectionStateChangeのみ発火する。
+const on_iceconnectionstatechange = function (remote_id) {
+
+    return function (ev) {
+        let peer = ev.target;
+        LOG(`${myUid}: iceconnectionState = ${peer.iceConnectionState}`);
+
+        switch (peer.iceConnectionState) {
+            case "closed":
+            case "failed":
+            case "disconnected":
+                closeVideoCall(remote_id);
+                break;
+        }
     }
 }
 
@@ -250,7 +253,6 @@ const on_signalingstatechange = function (remote_id) {
 
     return function (ev) {
         let peer = ev.target;
-
         LOG(`${myUid}: signalingState = ${peer.signalingState}`);
 
         switch (peer.signalingState) {
@@ -262,10 +264,13 @@ const on_signalingstatechange = function (remote_id) {
 };
 
 const on_icegatheringstatechange = function (ev) {
-    // No Operation
+    let peer = ev.target;
+    LOG(`${myUid}: iceGatheringState = ${peer.iceGatheringState}`);
 };
 
 const recive_offer = function (data) {
+
+    is_serv_connectivity = true;
 
     if (!peers[data.src].peer) {
         peers[data.src].peer = createPeerConnection(data.src);
@@ -296,7 +301,7 @@ const recive_answer = function (data) {
     LOG(`${data.src} -> ${myUid}: recive answer`)
     peers[data.src].peer.setRemoteDescription(desc)
         .catch(function (e) {
-            LOG(`${myUid}: recive answer. but failed`)
+            LOG(`${myUid}: recive answer. but failed : ${e}`)
         });
 }
 
@@ -308,7 +313,7 @@ const recive_icecandidate = function (data) {
         let candidate = new RTCIceCandidate(data.candidate);
         peers[data.src].peer.addIceCandidate(candidate)
             .catch(function (e) {
-                LOG(`${myUid}: addIceCandidate failed I am sorry`);
+                LOG(`${myUid}: addIceCandidate failed I am sorry: ${e}`);
             });
     }
 }
@@ -346,32 +351,44 @@ socketio.on("req-regist", function (msg) {
     regist(myUid);
 })
 
+socketio.on("reconnecting", function (msg) {
+
+    show_modal("AirMultiTalk", "サーバから切断されました\n初期化します");
+
+    Object.keys(peers).forEach(function (id) {
+        closeVideoCall(id);
+    })
+    is_serv_connectivity = true;
+})
 
 const reportError = function (err) {
     console.log(`ERROR : ${err}`);
     LOG(`ERROR : ${err}`);
 }
 
-function closeVideoCall(peer) {
+function closeVideoCall(remote_id) {
+    LOG(`CLOSE : ${remote_id}`)
     console.trace();
 
-    if (peer) {
-        peer.ontrack = null;
-        peer.onremovetrack = null;
-        peer.onremovestream = null;
-        peer.onicecandidate = null;
-        peer.oniceconnectionstatechange = null;
-        peer.onsignalingstatechange = null;
-        peer.onicegatheringstatechange = null;
-        peer.onnegotiationneeded = null;
+    if (peers[remote_id].peer) {
+        peers[remote_id].peer.ontrack = null;
+        peers[remote_id].peer.onremovetrack = null;
+        peers[remote_id].peer.onremovestream = null;
+        peers[remote_id].peer.onicecandidate = null;
+        peers[remote_id].peer.oniceconnectionstatechange = null;
+        peers[remote_id].peer.onsignalingstatechange = null;
+        peers[remote_id].peer.onicegatheringstatechange = null;
+        peers[remote_id].peer.onnegotiationneeded = null;
 
-        const remoteVideo = document.getElementById(`video_${get_peer_id(peer)}`);
+        const remoteVideo = document.getElementById(`video_${remote_id}`);
         if (remoteVideo.srcObject) {
             remoteVideo.srcObject.getTracks().forEach(track => track.stop());
         }
 
-        peer.close();
-        peer = null;
+        peers[remote_id].peer.close();
+        // peers[remote_id].peer = null;
+        delete peers[remote_id].peer
+
         remoteVideo.removeAttribute("src");
         remoteVideo.removeAttribute("srcObject");
     }
