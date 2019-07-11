@@ -11,11 +11,11 @@
 const modalArea = document.getElementById('modalArea');
 
 //MODAL CLOSE
-window.addEventListener("click", function () {
-    if (modalArea.classList.contains("is-show")) {
-        modalArea.classList.remove('is-show');
-    }
-})
+// window.addEventListener("click", function () {
+//     if (modalArea.classList.contains("is-show")) {
+//         modalArea.classList.remove('is-show');
+//     }
+// })
 
 const show_modal = function (title, msg) {
     document.getElementById("modal_title").innerText = title;

@@ -349,6 +349,9 @@ socketio.on("start", function (msg) {
 socketio.on("req-regist", function (msg) {
     console.log(`recive req-regist : ${msg}`);
     regist(myUid);
+    if (modalArea.classList.contains("is-show")) {
+        modalArea.classList.remove('is-show');
+    }
 })
 
 socketio.on("reconnecting", function (msg) {
