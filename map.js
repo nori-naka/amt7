@@ -1367,13 +1367,14 @@ $("#locationBtn").on("click", function () {
 
 //$("#videoBtn").css({"background-color": buttonRed});
 var videoMode = true;
-var videoHides = [];
+// var videoHides = [];
 
 $("#videoBtn").on("click", function () {
     if (videoMode) {
         $("#localBox").hide();
         $("#remoteBox").hide();
-        videoHides = [];
+        hide_video_all_func(true);
+        // videoHides = [];
         // $(".videoTitle").each(function (i, elm) {
         //     const id = elm.innerHTML;
         //     if (remoteVideoElms[id]) {
@@ -1385,6 +1386,7 @@ $("#videoBtn").on("click", function () {
     } else {
         $("#localBox").show();
         $("#remoteBox").show();
+        hide_video_all_func(false);
         // $(".videoTitle").each(function (i, elm) {
         //     const id = elm.innerHTML;
         //     if (videoHides.indexOf(id) >= 0) {

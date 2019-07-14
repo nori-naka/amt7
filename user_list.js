@@ -65,7 +65,7 @@ socketio.on("user_list", function (msg) {
                 $user_list.appendChild(new_user);
 
                 ping(new_id, new_user_title);
-                
+
                 let start_type = "end";
                 new_user_title.addEventListener("click", function (ev) {
 
@@ -129,7 +129,7 @@ setInterval(function () {
 }, 5000);
 
 socketio.on("remote_connect", function (msg) {
-    if (!msg) return; 
+    if (!msg) return;
     const data = JSON.parse(msg);
 
     if (data.dest == myUid) {
@@ -159,7 +159,7 @@ const ping = function (id, title_elm) {
         }));
 
         peers[id].ping_ttl--;
-        console.log(`peers[${id}].ping_ttl = ${peers[id].ping_ttl}`);
+        // console.log(`peers[${id}].ping_ttl = ${peers[id].ping_ttl}`);
 
         if (peers[id].ping_ttl < 0) {
             peers[id].ping_state = false;

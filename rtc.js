@@ -160,7 +160,7 @@ const on_negotiationneeded = function (remote_id) {
                     src: myUid,
                     sdp: peer.localDescription
                 }))
-            })            
+            })
     }
 }
 
@@ -332,7 +332,7 @@ socketio.on("publish", function (msg) {
     }
 });
 
-
+// start着信により映像送信、または映像停止を行う
 socketio.on("start", function (msg) {
     const data = JSON.parse(msg)
 
@@ -398,6 +398,7 @@ function closeVideoCall(remote_id) {
 
 }
 
+// リモート先にstartを送信して映像開始、停止を要求する。
 const call_video = function (call_type, remote_id) {
     socketio.emit("start", JSON.stringify({
         type: call_type,
@@ -406,6 +407,45 @@ const call_video = function (call_type, remote_id) {
     }));
 }
 
+// リモート全ての映像送信を停止させ、送信していたリモートidを保管しておく、
+const hide_video_all = function () {
+
+    const receiving_video_ids = [];
+
+    return function (hide) {
+
+        if (hide) {
+
+            Object.keys(peers).forEach(function (remote_id) {
+                let now_receiving = false;
+                if (peers[remote_id].peer) {
+                    peers[remote_id].peer.getReceivers().forEach(function (receiver) {
+                        if (receiver.track && receiver.track.kind == "video") {
+                            now_receiving = true;
+                            return;
+                        }
+                    });
+                }
+                if (now_receiving) {
+                    call_video("end", remote_id);
+                    // closeVideoCall(remote_id);
+                    receiving_video_ids.push(remote_id);
+                }
+            });
+        } else {
+
+            while (remote_id = receiving_video_ids.shift()) {
+                if (peers[remote_id]) {
+                    call_video("start", remote_id);
+                }
+            }
+        }
+    }
+}
+const hide_video_all_func = hide_video_all();
+
+
+// リモート先への映像送信を開始する
 const send_video_to = function (remote_id) {
 
     if (!peers[remote_id].peer) {
@@ -427,6 +467,7 @@ const send_video_to = function (remote_id) {
     })
 }
 
+// リモート先への映像送信を停止する。
 const stop_video_to = function (remote_id) {
 
     const p = peers[remote_id].peer;
