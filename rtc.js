@@ -160,7 +160,7 @@ const on_negotiationneeded = function (remote_id) {
                     src: myUid,
                     sdp: peer.localDescription
                 }))
-            })
+            })            
     }
 }
 
@@ -361,7 +361,7 @@ socketio.on("reconnecting", function (msg) {
     Object.keys(peers).forEach(function (id) {
         closeVideoCall(id);
     })
-    is_serv_connectivity = true;
+    is_serv_connectivity = false;
 })
 
 const reportError = function (err) {
@@ -413,6 +413,7 @@ const send_video_to = function (remote_id) {
     }
     local_stream.getVideoTracks().forEach(function (track) {
 
+        // 既に送信中の場合には、send_video_toを呼ばれても、addTrackしない。
         let now_sending_video = false;
         peers[remote_id].peer.getSenders().forEach(function (sender) {
             if (sender.track && sender.track.kind == "video") {

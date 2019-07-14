@@ -99,6 +99,9 @@
 .green_background {
     background: #00ffa0;
 }
+.gray_background {
+    background: #888;
+}
 
 .mic_btn {
     position: relative;

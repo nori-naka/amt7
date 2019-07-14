@@ -8,12 +8,14 @@
 // }    
 let peers = {};
 let last_list = [];
-
+const cPING_PERIOD = 1000;
+const cPING_TTL = 3;
 
 socketio.on("user_list", function (msg) {
     const data = JSON.parse(msg);
 
     const $user_list = document.getElementById("user_list");
+    is_serv_connectivity = true;
 
     Object.keys(data).forEach(function (new_id) {
 
@@ -62,10 +64,12 @@ socketio.on("user_list", function (msg) {
 
                 $user_list.appendChild(new_user);
 
+                ping(new_id, new_user_title);
+                
                 let start_type = "end";
                 new_user_title.addEventListener("click", function (ev) {
 
-                    if (!is_serv_connectivity) return;
+                    if (!is_serv_connectivity || !peers[new_id].ping_state) return;
 
                     let now_receiving = false;
                     if (peers[new_id].peer) {
@@ -103,30 +107,13 @@ socketio.on("user_list", function (msg) {
     last_list.forEach(function (last_list_item, index) {
         if (!Object.keys(data).includes(last_list_item)) {
 
-            // // peerがあるという事は接続実績がある、と言う事。
-            // if (peers[last_list_item].peer) {
-            //     if (peers[last_list_item].peer.iceConnectionState == "disconnected" || peers[last_list_item].peer.signalingState == "closed") {
-
-            //         last_list.splice(index, 1);
-
-            //         const delete_user = document.getElementById(`user_${last_list_item}`);
-            //         while (delete_user.firstChild) delete_user.removeChild(delete_user.firstChild);
-            //         $user_list.removeChild(document.getElementById(`user_${last_list_item}`));
-
-            //         delete peers[last_list_item].peer;
-            //         delete peers[last_list_item].video_elm;
-            //         delete peers[last_list_item].audio_elm;
-            //         delete peers[last_list_item];
-
-            //     }
-            // } else {
             last_list.splice(index, 1);
+
+            clearInterval(peers[last_list_item].ping_id);
 
             const delete_user = document.getElementById(`user_${last_list_item}`);
             while (delete_user.firstChild) delete_user.removeChild(delete_user.firstChild);
             $user_list.removeChild(document.getElementById(`user_${last_list_item}`));
-
-            // }
 
         }
     })
@@ -140,3 +127,48 @@ setInterval(function () {
         })
     )
 }, 5000);
+
+socketio.on("remote_connect", function (msg) {
+    if (!msg) return; 
+    const data = JSON.parse(msg);
+
+    if (data.dest == myUid) {
+        if (data.type == "reply") {
+            peers[data.src].ping_ttl = cPING_TTL;
+        } else if (data.type == "request") {
+            socketio.emit("remote_connect", JSON.stringify({
+                type: "reply",
+                dest: data.src,
+                src: myUid
+            }));
+        }
+    }
+})
+
+
+const ping = function (id, title_elm) {
+    // PING to remote peer
+    peers[id].ping_ttl = cPING_TTL;
+    peers[id].ping_state = true;
+    peers[id].ping_id = setInterval(function () {
+
+        socketio.emit("remote_connect", JSON.stringify({
+            type: "request",
+            dest: id,
+            src: myUid
+        }));
+
+        peers[id].ping_ttl--;
+        console.log(`peers[${id}].ping_ttl = ${peers[id].ping_ttl}`);
+
+        if (peers[id].ping_ttl < 0) {
+            peers[id].ping_state = false;
+            peers[id].ping_ttl = -1;
+            title_elm.classList.add("gray_background");
+        } else {
+            peers[id].ping_state = true;
+            title_elm.classList.remove("gray_background");
+        }
+
+    }, cPING_PERIOD);
+}
