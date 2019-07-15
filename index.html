@@ -39,17 +39,23 @@
     <div id="user_list" class="text box_width"></div>
   </div>
 
-  <!--
-  input_name add 2019.05.24
--->
-  <div id="input_name" sytle="display: none" class="input_name">
+  <!-- <div id="input_name" sytle="display: none" class="input_name">
     <div class="box-title">LOGIN</div>
     <p>
       <label>NAME:</label>
       <input type="text" id="name" class="text">
+    </p>
+    <p>
+      <label>GROUP:</label>
+      <select name="group_id" id="group_id" class="text">
+        <option value="g1">グループ１</option>
+        <option value="g2">グループ２</option>
+        <option value="g3">グループ３</option>
+        <option value="g4">グループ４</option>
+      </select>
       <button id="name_ok_btn" class="a_button" type="button">OK</button>
     </p>
-  </div>
+  </div> -->
 
   <div id="memo_pop" class="text">
     <div>
@@ -235,11 +241,14 @@
   <script src="js/ol.js"></script>
   <script src="js/spectrum.rev.js"></script>
   <script src="js/jquery.spectrum-ja.js"></script>
+
   <script>
     var socketio = io.connect();
     var myUid;
+    var user_name;
+    var group_id;
     var callback_get_mediaDevice = [];
-
+  
     const LOG = function (msg) {
       if (typeof msg == "string") {
         var log_msg = {
@@ -255,27 +264,39 @@
       socketio.emit("log", JSON.stringify(log_msg));
       console.log(msg);
     }
-
-    const init_user_id = "initial_user_id";
-    const login = function () {
-      if (init_user_id == "initial_user_id") {
-        return getUniqueStr();
-      } else {
-        return init_user_id;
-      }
-    }
-
+  
     const getUniqueStr = function (myStrong) {
       var strong = 10;
       if (myStrong) strong = myStrong;
       return new Date().getTime().toString(16) + Math.floor(strong * Math.random()).toString(16)
     }
+  
+    const url_parse = function () {
+      var obj = {};
+      var url = window.location.search;
+  
+      var hash  = url.slice(1).split('&');    
+      for (var i = 0; i < hash.length; i++) {
+        var array = hash[i].split('=');    //keyと値に分割。
+        obj[array[0]] = array[1];
+      }  
+      return obj;
+    }
+  
+    var query = url_parse();
+    user_name = decodeURI(query.user_name);
+    group_id = query.group_id;
 
-    myUid = login();
-    document.getElementById("myUid").innerText = myUid;
-
+    myUid = getUniqueStr();
+    if (user_name){
+      document.getElementById("myUid").innerText = `${user_name}@${group_id}`;
+    } else {
+      document.getElementById("myUid").innerText = myUid;
+    }
 
   </script>
+    
+
 
   <!-- <script src="menu.js"></script>
   <script src='p2p.js'></script>
@@ -303,24 +324,24 @@
   <script type="text/javascript" src="/main.js"></script>
 
   <script>
-    // init_user_id = "initial_user_id";
-    window.onload = function () {
-      // setVideoSize();
-      // myUid = login();
-      // p2pInit(myUid);
-      // disp_init();
-      showMap();
-      curPos(myUid);
-      sendPositionRepeatedly();
-      colorBtnInit();
-      // if (myUid == "ControlCenter") {
-      //   $("#telBtn").hide();
-      // }
-      // $("#myVideoTitle").html(myUid);
-      // //JISYOU_LAYER.add();
-      RECORD_layer.add();
-      my_video_start(constraints);
-    }
+      // init_user_id = "initial_user_id";
+  window.onload = function () {
+    // setVideoSize();
+    // myUid = login();
+    // p2pInit(myUid);
+    // disp_init();
+    showMap();
+    curPos(myUid);
+    sendPositionRepeatedly();
+    colorBtnInit();
+    // if (myUid == "ControlCenter") {
+    //   $("#telBtn").hide();
+    // }
+    // $("#myVideoTitle").html(myUid);
+    // //JISYOU_LAYER.add();
+    RECORD_layer.add();
+    my_video_start(constraints);
+  }
   </script>
 </body>
 

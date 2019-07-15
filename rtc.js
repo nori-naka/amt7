@@ -50,9 +50,12 @@ var hide_constraints = {
 let constraints = user_constraints;
 // let constraints = test_constraints;
 
-const regist = function (id) {
-    LOG(`REGIST: myUid=${myUid}`)
-    socketio.emit("regist", id);
+const regist = function (id, group_id) {
+    LOG(`REGIST: myUid=${id} / group_id=${group_id}`)
+    socketio.emit("regist", JSON.stringify({
+        id: id,
+        group_id: group_id
+    }));
 }
 
 
@@ -343,12 +346,11 @@ socketio.on("start", function (msg) {
             stop_video_to(data.src);
         }
     }
-
 });
 
 socketio.on("req-regist", function (msg) {
     console.log(`recive req-regist : ${msg}`);
-    regist(myUid);
+    regist(myUid, group_id);
     if (modalArea.classList.contains("is-show")) {
         modalArea.classList.remove('is-show');
     }
@@ -619,5 +621,5 @@ $mic_btn.addEventListener("mouseup", function (ev) {
     stop_audio_to_all()
 })
 
-regist(myUid);
+regist(myUid, group_id);
 // my_video_start(constraints);

@@ -52,33 +52,6 @@ var TOUCH_END_EVENT = supportTouch ? 'touchend' : 'mouseup';
 //     socketio.emit("log", JSON.stringify(log_msg));
 // }
 
-var user_name = null;
-
-var input_name = function () {
-    var $input_name = document.getElementById("input_name");
-    var $name_ok_btn = document.getElementById("name_ok_btn");
-    var $name = document.getElementById("name");
-
-    $input_name.style.display = "block";
-    var input_name_change = function () {
-        if ($name.value != "") {
-            user_name = $name.value;
-            // document.getElementById("myVideoTitle").innerText = user_name;
-            document.getElementById("myUid").innerText = user_name;
-        } else {
-            user_name = myUid;
-        }
-        $input_name.style.display = "none";
-    }
-    $name_ok_btn.addEventListener("click", input_name_change);
-    $input_name.addEventListener("keydown", function (e) {
-        if (e.keyCode == 13) input_name_change();
-    });
-
-}
-input_name();
-
-
 
 // "ID:[Type, Lon, Lat]"
 // Type { 1:人、2:車 }

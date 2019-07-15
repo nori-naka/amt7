@@ -57,14 +57,31 @@ var server = require("https").createServer(options, function (req, res) {
 
 
     var filePath;
-    if (urlParse.pathname == '/' || urlParse.pathname == '/index.html') {
-        if (is_webview) {
-            filePath = '/index_wv.html';
+    // クエリ文字が無い場合
+    if (Object.keys(urlParse.query).length == 0){
+        // 且つ、パスがindex.htmlの場合、
+        if (urlParse.pathname == '/' || urlParse.pathname == '/index.html') {
+            // 最初のアクセスなので、ログインページに行く
+            filePath = '/login.html';
         } else {
-            filePath = '/index.html';
+            // クエリ文字が無くても、index.html宛てでない場合は、普通にそのファイルを返す
+            filePath = decodeURI(urlParse.pathname);
         }
+    // クエリ文字がある場合
     } else {
-        filePath = decodeURI(urlParse.pathname);
+        // 且つ、パスがindex.htmlの場合、
+        if (urlParse.pathname == '/' || urlParse.pathname == '/index.html') {
+            // ログイン後のアクセスなので、グループidでのroom設定を行う。
+            if (is_webview) {
+                filePath = '/index_wv.html';
+            } else {
+                filePath = '/index.html';
+            }
+            // ユーザ名とグループIDを設定する。
+            // set_user_group (urlParse.query.user_name, urlParse.query.group_id)
+        } else {
+            filePath = decodeURI(urlParse.pathname);
+        }
     }
     // console.log("req.url=" + req.url);
     // console.log("filePath=" + filePath);
@@ -95,6 +112,7 @@ var io = require("socket.io").listen(server);
 var userHash = {};
 var user_list = {};
 var user_sid = {};
+var user_gid = {};
 //-------------------------------------------------------------
 // userHash = {
 //   id : { lat : lat,  lng : lng, ttl : ttl, name: name},
@@ -138,11 +156,19 @@ io.on("connection", function (socket) {
     // });
 
     // 登録
-    socket.on("regist", function (_id) {
+    socket.on("regist", function (msg) {
+        var data = JSON.parse(msg);
+        console.dir(msg)
         // console.log('ON REGIST:' + _id);
-        LOG(USER_LIST_LOG_FLAG, 'ON REGIST:' + _id);
+        LOG(USER_LIST_LOG_FLAG, `ON REGIST: ${data.id}@${data.group_id}`);
+        _id = data.id;
+        group_id = data.group_id;
+
+        socket.join(group_id);
 
         user_sid[_id] = socket.id;
+        user_gid[_id] = group_id;
+
         console.log(`changed user_sid `);
         console.dir(user_sid);
         socket.broadcast.emit("regist", JSON.stringify({ id: _id }));

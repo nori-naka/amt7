@@ -129,14 +129,14 @@ io.on("connection", function (socket) {
     });
 
     // 接続開始
-    socket.on("connected", function (_id) {
-        // console.log('ENTERED:' + _id);
-        LOG(USER_LIST_LOG_FLAG, 'ENTERED:' + _id)
-        user_sid[_id] = socket.id;
-        socket.broadcast.emit("start", { id: _id });
-        // console.log("CONNECTED: USER_ID=" + _id + " USER_SID=" + JSON.stringify(user_sid));
-        LOG(USER_LIST_LOG_FLAG, "CONNECTED: USER_ID=" + _id + " USER_SID=" + JSON.stringify(user_sid));
-    });
+    // socket.on("connected", function (_id) {
+    //     // console.log('ENTERED:' + _id);
+    //     LOG(USER_LIST_LOG_FLAG, 'ENTERED:' + _id)
+    //     user_sid[_id] = socket.id;
+    //     socket.broadcast.emit("start", { id: _id });
+    //     // console.log("CONNECTED: USER_ID=" + _id + " USER_SID=" + JSON.stringify(user_sid));
+    //     LOG(USER_LIST_LOG_FLAG, "CONNECTED: USER_ID=" + _id + " USER_SID=" + JSON.stringify(user_sid));
+    // });
 
     // 登録
     socket.on("regist", function (_id) {
@@ -264,6 +264,17 @@ io.on("connection", function (socket) {
         }
         //console.log(`PUBLISH MSG: ${msg}`);
     });
+
+    // PING
+    socket.on("remote_connect", function (msg) {
+        var data = JSON.parse(msg);
+
+        // console.log(`remote_connect ${msg}`);
+        if (data.dest) {
+            socket.to(user_sid[data.dest]).emit("remote_connect", msg);
+        }
+    });
+
 
     // 位置情報着信
     socket.on("renew", function (msg) {
