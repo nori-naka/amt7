@@ -123,6 +123,7 @@ setInterval(function () {
     socketio.emit("user_list", JSON.stringify(
         {
             id: myUid,
+            group_id: group_id,
             name: user_name
         })
     )

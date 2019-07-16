@@ -1136,7 +1136,7 @@ function initDraw() {
         }
         timerCnt = 100;
         timerId = setInterval(function () {
-            sendDraw(currentFeature, lineId);
+            sendDraw(currentFeature, lineId, myUid);
             if (--timerCnt <= 0) {
                 clearInterval(timerId);
                 timerId = null;
@@ -1148,9 +1148,9 @@ function initDraw() {
         clearInterval(timerId);
         const currentFeature = e.feature;//this is the feature fired the event
         //const id = getUniqueStr();
-        //sendDraw(e.feature, id);
+        //sendDraw(e.feature, id, myUid);
         //e.feature.set("id", id);
-        sendDraw(e.feature, lineId);
+        sendDraw(e.feature, lineId, myUid);
         //console.log("draw end");
     });
 
@@ -1208,11 +1208,12 @@ function initFreeErase() {
     });
 }
 
-function sendDraw(feature, id) {
+function sendDraw(feature, id, myUid) {
     var data = {};
     data.width = drawLineWidth;
     data.color = drawLineColor;
     data.id = id;
+    data.src = myUid;
     data.coords = [];
     feature.getGeometry().getCoordinates().forEach(function (pair) {
         data.coords.push(ol.proj.transform(pair, 'EPSG:3857', 'EPSG:4326'));
@@ -1315,7 +1316,8 @@ function eraseNearest(myCoord) {
         //alert(minFeature.get("id"));
         drawLayerSource.removeFeature(minFeature);
         minFeature.changed();
-        socketio.emit("erase", minFeature.get("id"));
+        // socketio.emit("erase", minFeature.get("id"));
+        socketio.emit("erase", JSON.stringify({id: minFeature.get("id"), src: myUid}));
         //console.log("erased");
     }
 }
