@@ -1224,6 +1224,7 @@ function sendDraw(feature, id, myUid) {
 }
 
 function receiveDraw(data) {
+    console.log(data);
     if (!data || !data.coords || data.coords.length == 0) {
         return;
     }
@@ -1317,7 +1318,7 @@ function eraseNearest(myCoord) {
         drawLayerSource.removeFeature(minFeature);
         minFeature.changed();
         // socketio.emit("erase", minFeature.get("id"));
-        socketio.emit("erase", JSON.stringify({id: minFeature.get("id"), src: myUid}));
+        socketio.emit("erase", JSON.stringify({ id: minFeature.get("id"), src: myUid }));
         //console.log("erased");
     }
 }
