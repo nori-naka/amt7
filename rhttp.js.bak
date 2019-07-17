@@ -46,7 +46,7 @@ fs.mkdir("tmp", function (err) {
 })
 
 // サーバの初期化
-// var server = require("https").createServer(options, function (req, res) {
+//var server = require("https").createServer(options, function (req, res) {
 var server = require("http").createServer(function (req, res) {
     var urlParse = url.parse(req.url, true);
 
@@ -58,31 +58,14 @@ var server = require("http").createServer(function (req, res) {
 
 
     var filePath;
-    // クエリ文字が無い場合
-    if (Object.keys(urlParse.query).length == 0) {
-        // 且つ、パスがindex.htmlの場合、
-        if (urlParse.pathname == '/' || urlParse.pathname == '/index.html') {
-            // 最初のアクセスなので、ログインページに行く
-            filePath = '/login.html';
+    if (urlParse.pathname == '/' || urlParse.pathname == '/index.html') {
+        if (is_webview) {
+            filePath = '/index_wv.html';
         } else {
-            // クエリ文字が無くても、index.html宛てでない場合は、普通にそのファイルを返す
-            filePath = decodeURI(urlParse.pathname);
+            filePath = '/index.html';
         }
-        // クエリ文字がある場合
     } else {
-        // 且つ、パスがindex.htmlの場合、
-        if (urlParse.pathname == '/' || urlParse.pathname == '/index.html') {
-            // ログイン後のアクセスなので、グループidでのroom設定を行う。
-            if (is_webview) {
-                filePath = '/index_wv.html';
-            } else {
-                filePath = '/index.html';
-            }
-            // ユーザ名とグループIDを設定する。
-            // set_user_group (urlParse.query.user_name, urlParse.query.group_id)
-        } else {
-            filePath = decodeURI(urlParse.pathname);
-        }
+        filePath = decodeURI(urlParse.pathname);
     }
     // console.log("req.url=" + req.url);
     // console.log("filePath=" + filePath);
@@ -113,28 +96,10 @@ var io = require("socket.io").listen(server);
 var userHash = {};
 var user_list = {};
 var user_sid = {};
-var user_gid = {};
 //-------------------------------------------------------------
 // userHash = {
-//   group_id1 : {
-//       id11 : { lat : lat11,  lng : lng11, ttl : ttl, name: name11},
-//       id12 : { lat : lat12,  lng : lng12, ttl : ttl, name: name12},
-//   },
-//   group_id2 : {
-//       id21 : { lat : lat21,  lng : lng21, ttl : ttl, name: name21},
-//       id22 : { lat : lat22,  lng : lng22, ttl : ttl, name: name22},
-//   }
-// }
-//-------------------------------------------------------------
-// user_list = {
-//   group_id1 : {
-//       id11 : { ttl : ttl, name: name11},
-//       id12 : { ttl : ttl, name: name12},
-//   },
-//   group_id2 : {
-//       id21 : { ttl : ttl, name: name21},
-//       id22 : { ttl : ttl, name: name22},
-//   }
+//   id : { lat : lat,  lng : lng, ttl : ttl, name: name},
+//   id : { lat : lat,  lng : lng, ttl : ttl, name: name},
 // }
 //-------------------------------------------------------------
 // user_sid = {
@@ -163,29 +128,44 @@ io.on("connection", function (socket) {
         LOG(MSG_LOG_FLAG, `from=${data.id} // ${data.text}`);
     });
 
-    // 登録
-    socket.on("regist", function (msg) {
-        var data = JSON.parse(msg);
-        console.dir(msg)
-        // console.log('ON REGIST:' + _id);
-        LOG(USER_LIST_LOG_FLAG, `ON REGIST: ${data.id}@${data.group_id}`);
-        _id = data.id;
-        group_id = data.group_id;
+    // 接続開始
+    // socket.on("connected", function (_id) {
+    //     // console.log('ENTERED:' + _id);
+    //     LOG(USER_LIST_LOG_FLAG, 'ENTERED:' + _id)
+    //     user_sid[_id] = socket.id;
+    //     socket.broadcast.emit("start", { id: _id });
+    //     // console.log("CONNECTED: USER_ID=" + _id + " USER_SID=" + JSON.stringify(user_sid));
+    //     LOG(USER_LIST_LOG_FLAG, "CONNECTED: USER_ID=" + _id + " USER_SID=" + JSON.stringify(user_sid));
+    // });
 
-        socket.join(group_id);
+    // 登録
+    socket.on("regist", function (_id) {
+        // console.log('ON REGIST:' + _id);
+        LOG(USER_LIST_LOG_FLAG, 'ON REGIST:' + _id);
 
         user_sid[_id] = socket.id;
-        user_gid[_id] = group_id;
-
-        if (!userHash[group_id]) {
-            userHash[group_id] = {};
-        }
-
         console.log(`changed user_sid `);
         console.dir(user_sid);
         socket.broadcast.emit("regist", JSON.stringify({ id: _id }));
         socket.emit("alldraw", JSON.stringify(allDraw));
     });
+
+    // // 登録応答
+    // socket.on("regist-apply", function (msg) {
+    //     var data = JSON.parse(msg);
+    //     console.log(`ON REGIST-APPLY: DEST=${data.dest} SRC=${data.src}`);
+    //     if (!user_sid[data.src]){
+    //         user_sid[data.src] = socket.id;
+    //     }
+    //     socket.to(user_sid[data.dest]).emit("regist-apply", msg);
+    // });
+
+    // // Senderからの映像ソース変更
+    // socket.on("video_init", function (msg) {
+    //     var data = JSON.parse(msg);
+    //     console.log(`ON VIDEO_INIT: DEST=${data.dest} SRC=${data.src}`);
+    //     socket.to(user_sid[data.dest]).emit("video_init", msg);
+    // });
 
     // P2P開始
     socket.on("start", function (msg) {
@@ -194,6 +174,8 @@ io.on("connection", function (socket) {
         LOG(MSG_LOG_FLAG, `ON START: ${data.src} -> ${data.dest}  MSG=${msg}`);
         if (data.dest) {
             socket.to(user_sid[data.dest]).emit("start", msg);
+        } else {
+            socket.broadcast.emit("start", msg);
         }
     });
 
@@ -301,10 +283,7 @@ io.on("connection", function (socket) {
         LOG(USER_LIST_LOG_FLAG, `ON RENEW : From=${data.id} LAT=${data.lat} LNG=${data.lng} CAM=${data.cam} NAME=${data.name}`);
 
         if (data.id) {
-            if (!userHash[user_gid[data.id]]) {
-                userHash[user_gid[data.id]] = {};
-            }
-            userHash[user_gid[data.id]][data.id] = { lat: data.lat, lng: data.lng, ttl: ttlVal, cam: data.cam, name: data.name };
+            userHash[data.id] = { lat: data.lat, lng: data.lng, ttl: ttlVal, cam: data.cam, name: data.name };
             //console.log("RECIVE:USERHASH=" + JSON.stringify(userHash));
         }
     });
@@ -315,11 +294,11 @@ io.on("connection", function (socket) {
         // console.log(`ON CAMERA : ID=${data.id} CAM=${data.cam}`);
 
         if (data.id) {
-            if (userHash[user_gid[data.id]][data.id]) {
-                userHash[user_gid[data.id]][data.id].cam = data.cam;
+            if (userHash[data.id]) {
+                userHash[data.id].cam = data.cam;
                 //userHash[data.id].cam = true;
             } else {
-                userHash[user_gid[data.id]][data.id] = { lat: null, lng: null, ttl: ttlVal, cam: data.cam, name: data.name };
+                userHash[data.id] = { lat: null, lng: null, ttl: ttlVal, cam: data.cam, name: data.name };
                 //userHash[data.id] = { lat: null, lng: null, ttl: ttlVal, cam: true };
             }
         }
@@ -356,23 +335,17 @@ io.on("connection", function (socket) {
 
     // 手書き
     socket.on("draw", function (jsonData) {
-        // console.log("[DRAW]" + jsonData);
-        // socket.broadcast.emit("draw", jsonData);
-
+        //console.log("[DRAW]" + jsonData);
+        socket.broadcast.emit("draw", jsonData);
         const newData = JSON.parse(jsonData);
-        socket.to(user_gid[newData.src]).emit("draw", jsonData);
-
         allDraw = allDraw.filter(data => data.id != newData.id);
         allDraw.push(newData);
     })
 
-    // socket.on("erase", function (id) {
-    socket.on("erase", function (msg) {
-        var _data = JSON.parse(msg);
+    socket.on("erase", function (id) {
         //console.log("[ERASE]" + id);
-        // socket.broadcast.emit("erase", id);
-        socket.to(user_gid[_data.src]).emit("erase", _data.id);
-        allDraw = allDraw.filter(data => data.id != _data.id);
+        socket.broadcast.emit("erase", id);
+        allDraw = allDraw.filter(data => data.id != id);
     })
 
 
@@ -383,12 +356,8 @@ io.on("connection", function (socket) {
         var data = JSON.parse(msg);
 
         if (data.id) {
-            user_sid[data.id] = socket.id;
-            user_gid[data.id] = data.group_id;
-            if (!user_list[data.group_id]) {
-                user_list[data.group_id] = {};
-            }
-            user_list[data.group_id][data.id] = { ttl: ttlVal, name: data.name };
+            user_sid[data.id] = socket.id
+            user_list[data.id] = { ttl: ttlVal, name: data.name };
         }
     });
 
@@ -406,31 +375,23 @@ io.on("connection", function (socket) {
 setInterval(function () {
     // console.log(`USER_LIST=${JSON.stringify(user_list)}`);
     LOG(USER_LIST_LOG_FLAG, `SEND USER_LIST=${JSON.stringify(user_list)}`);
-    Object.keys(user_list).forEach(function (group_id) {
-        io.to(group_id).emit("user_list", JSON.stringify(user_list[group_id]));
-    });
+    io.emit("user_list", JSON.stringify(user_list));
 }, 5000);
 
 setInterval(function () {
-    // io.emit("renew", JSON.stringify(userHash));
-    Object.keys(userHash).forEach(function (group_id) {
-        io.to(group_id).emit("renew", JSON.stringify(userHash[group_id]));
-    });
+    io.emit("renew", JSON.stringify(userHash));
 }, 1500);
 
 
 setInterval(function () {
-    Object.keys(user_list).forEach(function (group_id) {
-        Object.keys(user_list[group_id]).forEach(function (id) {
-            user_list[group_id][id].ttl = user_list[group_id][id].ttl - 1;
-            if (user_list[group_id][id].ttl < 0) {
-                delete user_list[group_id][id];
-                delete user_sid[id];
-                delete user_gid[id];
-                // console.log(`DELETE id=${id} USER_LIST=${JSON.stringify(user_list)}`);
-                LOG(USER_LIST_LOG_FLAG, `DELETE id=${id} USER_LIST=${JSON.stringify(user_list)} USER_SID=${JSON.stringify(user_sid)}`);
-            }
-        });
+    Object.keys(user_list).forEach(function (id) {
+        user_list[id].ttl = user_list[id].ttl - 1;
+        if (user_list[id].ttl < 0) {
+            delete user_list[id];
+            delete user_sid[id];
+            // console.log(`DELETE id=${id} USER_LIST=${JSON.stringify(user_list)}`);
+            LOG(USER_LIST_LOG_FLAG, `DELETE id=${id} USER_LIST=${JSON.stringify(user_list)} USER_SID=${JSON.stringify(user_sid)}`);
+        }
     });
 }, 5000);
 
@@ -438,17 +399,15 @@ setInterval(function () {
     const now = (new Date()).getTime();
     if (now >= keepAliveTime + 1500) {
         keepAliveTime = now;
-        Object.keys(userHash).forEach(function (group_id) {
-            Object.keys(userHash[group_id]).forEach(function (id) {
-                userHash[group_id][id].ttl = userHash[group_id][id].ttl - 1;
-                if (userHash[group_id][id].ttl < 0) {
-                    delete userHash[group_id][id];
-                    //delete user_sid[id];
-                    // console.log(`DELETE id=${id} USER_HASH=${JSON.stringify(userHash)}`);
-                    LOG(USER_LIST_LOG_FLAG, `DELETE id=${id} USER_HASH=${JSON.stringify(userHash)}`);
-                }
-            });
-        })
+        Object.keys(userHash).forEach(function (id) {
+            userHash[id].ttl = userHash[id].ttl - 1;
+            if (userHash[id].ttl < 0) {
+                delete userHash[id];
+                //delete user_sid[id];
+                // console.log(`DELETE id=${id} USER_HASH=${JSON.stringify(userHash)}`);
+                LOG(USER_LIST_LOG_FLAG, `DELETE id=${id} USER_HASH=${JSON.stringify(userHash)}`);
+            }
+        });
     }
 }, 1500);
 
