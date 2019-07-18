@@ -38,7 +38,7 @@ USER_LIST_LOG_FLAG = false;
 MSG_LOG_FLAG = true;
 SERVER_LOG_FLAG = false;
 
-var allDraw = [];
+// var allDraw = [];
 
 fs.mkdir("tmp", function (err) {
     if (err) console.log(`ERROR MKDIR : TMP Folder :$`);
@@ -113,6 +113,7 @@ var userHash = {};
 var user_list = {};
 var user_sid = {};
 var user_gid = {};
+var allDraw = {};
 //-------------------------------------------------------------
 // userHash = {
 //   group_id1 : {
@@ -137,9 +138,27 @@ var user_gid = {};
 // }
 //-------------------------------------------------------------
 // user_sid = {
-//   id : socket_id,
+//   group_id1 : {
+//       id1 : socket_id1,
+//       id2 : socket_id2,
+//   },
 // }
 //-------------------------------------------------------------
+// allDraw = {
+//   group_id1 : [
+//                 {
+//                    width :3,
+//                    color :"#000000",
+//                    coords:[[lat1,lng1],[lat2,lng2],[lat3,lng3]],
+//                 },
+//                 {
+//                    width :3,
+//                    color :"#000000",
+//                    coords:[[lat1,lng1],[lat2,lng2],[lat3,lng3]],
+//                 },
+//               ],
+//   group_id2 : [],
+// }
 
 var getUniqueStr = function (myStrong) {
     var strong = 10;
@@ -182,8 +201,9 @@ io.on("connection", function (socket) {
 
         console.log(`changed user_sid `);
         console.dir(user_sid);
-        socket.broadcast.emit("regist", JSON.stringify({ id: _id }));
-        socket.emit("alldraw", JSON.stringify(allDraw));
+        socket.broadcast.emit("regist", JSON.stringify({ id: _id }));//現在、誰も受信していない
+        // socket.emit("alldraw", JSON.stringify(allDraw));
+        io.to(group_id).emit("alldraw", JSON.stringify(allDraw[group_id]));
     });
 
     // P2P開始
@@ -361,8 +381,11 @@ io.on("connection", function (socket) {
         const newData = JSON.parse(jsonData);
         socket.to(user_gid[newData.src]).emit("draw", jsonData);
 
-        allDraw = allDraw.filter(data => data.id != newData.id);
-        allDraw.push(newData);
+        if(!allDraw[user_gid[newData.src]]){
+            allDraw[user_gid[newData.src]] = [];
+        }
+        allDraw[user_gid[newData.src]] = allDraw[user_gid[newData.src]].filter(data => data.id != newData.id);
+        allDraw[user_gid[newData.src]].push(newData);
     })
 
     // socket.on("erase", function (id) {
@@ -371,7 +394,7 @@ io.on("connection", function (socket) {
         //console.log("[ERASE]" + id);
         // socket.broadcast.emit("erase", id);
         socket.to(user_gid[_data.src]).emit("erase", _data.id);
-        allDraw = allDraw.filter(data => data.id != _data.id);
+        allDraw[user_gid[_data.src]] = allDraw[user_gid[_data.src]].filter(data => data.id != _data.id);
     })
 
 
