@@ -1258,9 +1258,11 @@ socketio.on("draw", function (jsonData) {
 
 socketio.on("alldraw", function (jsonData) {
     const dataSet = JSON.parse(jsonData);
-    dataSet.forEach(function (data) {
-        receiveDraw(data);
-    });
+    if (dataSet) {
+        dataSet.forEach(function (data) {
+            receiveDraw(data);
+        });
+    }
 });
 
 //手書き消去

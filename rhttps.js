@@ -21,11 +21,16 @@ var json_filename = "./RECORD_layer/position.json";
 var out_str = fs.readFileSync(json_filename, 'utf8')
 var position_hash = JSON.parse(out_str)
 
-var options = {
+const ssl_options = {
     key: fs.readFileSync(SSL_KEY).toString(),
     cert: fs.readFileSync(SSL_CERT).toString()
 };
 
+const socket_options = {
+    cookie: false,
+    serveClient: false,
+    transports: ['websocket']
+}
 const getUniqueId = getUniqueIdMaker();
 
 const LOG = function (flag, msg) {
@@ -46,7 +51,7 @@ fs.mkdir("tmp", function (err) {
 })
 
 // サーバの初期化
-var server = require("https").createServer(options, function (req, res) {
+var server = require("https").createServer(ssl_options, function (req, res) {
     var urlParse = url.parse(req.url, true);
 
     // User-Agent : WebView detected
@@ -106,7 +111,7 @@ var server = require("https").createServer(options, function (req, res) {
         }
     });
 }).listen(process.env.PORT || PORT);
-var io = require("socket.io").listen(server);
+var io = require("socket.io").listen(server, socket_options);
 
 // ユーザ管理ハッシュ
 var userHash = {};

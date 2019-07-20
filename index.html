@@ -227,23 +227,27 @@
   </div>
 
   <div id="sidebox" class="box28">
-    <p id="sidebox_x" class="box-title">笨销</p>
+    <p id="sidebox_x" class="box-title">X</p>
     <p id="sidebox_in" class="openbox"></p>
   </div>
 
   <div id="centorbox" class="box29">
-    <p id="centorbox_x" class="box-title">笨销</p>
+    <p id="centorbox_x" class="box-title">X</p>
     <p id="centorbox_in" class="openbox"></p>
   </div>
 
-  <script src="/socket.io/socket.io.js"></script>
+  <script src="/node_modules/socket.io-client/dist/socket.io.js"></script>
   <script src="js/jquery-3.3.1.min.js"></script>
   <script src="js/ol.js"></script>
   <script src="js/spectrum.rev.js"></script>
   <script src="js/jquery.spectrum-ja.js"></script>
 
   <script>
-    var socketio = io.connect();
+    var socket_options = {
+      reconnectionDelay: 5000,
+      transports: ['websocket']
+    }
+    var socketio = io.connect(location.origin, socket_options);
     var myUid;
     var user_name;
     var group_id;

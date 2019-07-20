@@ -160,7 +160,7 @@ const ping = function (id, title_elm) {
         }));
 
         peers[id].ping_ttl--;
-        console.log(`peers[${id}].ping_ttl = ${peers[id].ping_ttl}`);
+        // console.log(`peers[${id}].ping_ttl = ${peers[id].ping_ttl}`);
 
         if (peers[id].ping_ttl < 0) {
             peers[id].ping_state = false;
